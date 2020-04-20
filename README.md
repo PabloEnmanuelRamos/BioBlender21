@@ -35,7 +35,7 @@ This set up will allow you to update dynamically to the latest snapshot of BioBl
 1. Get the latest version
    ```bash
    mkdir ~/BioBlender
-   git clone https://github.com/PabloEnmanuelRamos/BioBlender2.1.git ~/BioBlender
+   git clone https://github.com/PabloEnmanuelRamos/BioBlender21.git ~/BioBlender
    ln -s ~/BioBlender ~/.config/blender/%BLENDER_VERSION_NUM%/scripts/addons/BioBlender
    ```
 
@@ -63,7 +63,7 @@ This set up will allow you to update dynamically to the latest snapshot of BioBl
 
     ```dos
     mkdir C:\some\directory\BioBlender
-    git clone http://github.com/PabloEnmanuelRamos/BioBlender2.1.git C:\some\directory\BioBlender
+    git clone http://github.com/PabloEnmanuelRamos/BioBlender21.git C:\some\directory\BioBlender
     mklnk /d "C:\Users\%username%\AppData\Roaming\Blender Foundation\Blender\%BLENDER_VERSION_NUM%\scripts\addons\BioBlender" C:\some\directory\BioBlender
     ```
     The ```mklink``` step will work with ```/d``` or ```/j```, both ```/d``` and ```/j``` are good options, of the two /j requires no elevated user privileges so if ```/d``` fails, then use ```/j```
