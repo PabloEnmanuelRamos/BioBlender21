@@ -335,7 +335,7 @@ def importPreview(verbose=False, retrieved=False):
 # retrieve PDB from pdb.org
 def pdbdotorg(id):
     print("pdbdotorg")
-    url1 = str("http://www.pdb.org/pdb/files/" + id + ".pdb")
+    url1 = str("https://www.rcsb.org/pdb/files/" + id + ".pdb")
     save1 = str(homePath + "fetched" + os.sep + id + ".pdb")
     if opSystem == "linux":
         if not os.path.isdir(panel.quotedPath(homePath + "fetched")):
