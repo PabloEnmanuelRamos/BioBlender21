@@ -7,7 +7,7 @@ It was developed by the Scientific Visualization Unit of the Institute of Clinic
 
 We have now made it an Open Project, with the intent of keeping it updated, as long as Blender keeps moving on, and of possibly introducing new, better and useful features.
 
-More info can be found on the SciVis website (www.scivis.it) and on BioBlender.eu, where is also present the Forum http://www.scivis.it/community/
+More info can be found on the SciVis website (www.scivis.it) and on BioBlender.eu, where is also present the [Forum] (http://www.scivis.it/community/)
 
 BioBlender was developed to work on Windows, Mac and Linux. Therefore each fix will need to be tested on each of these platforms.
 Also, as BioBlender is supposed to handle different types of molecules, we will test:
