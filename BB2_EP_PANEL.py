@@ -682,7 +682,7 @@ def scenewideSurface():
 
     command = panel.quotedPath(command)
     panel.launch(exeName=command)
-
+    time.sleep(2)
     bpy.ops.import_scene.x3d(filepath=homePath + "tmp" + os.sep + "scenewide.wrl", axis_forward="Y", axis_up="Z")
 
     try:
