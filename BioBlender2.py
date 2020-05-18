@@ -57,11 +57,14 @@ pyMolPath = ""
 pyMolPathSearch = [
     "%systemdrive%\\Python35\\Scripts\\pymol.cmd",
     "%programfiles%\\PyMOL\\PyMOL\\PymolWin.exe",
+    "%programfiles%\\PyMOL\\PyMOLWin.exe",
     "%programfiles%\\DeLano Scientific\\PyMOL Eval\\PymolWin.exe",
     "%programfiles%\\DeLano Scientific\\PyMOL\\PymolWin.exe",
     "%programfiles(x86)%\\PyMOL\\PyMOL\\PymolWin.exe",
+    "%programfiles(x86)%\\PyMOL\\PyMOLWin.exe",
     "%programfiles(x86)%\\DeLano Scientific\\PyMOL Eval\\PymolWin.exe",
     "%programfiles(x86)%\\DeLano Scientific\\PyMOL\\PymolWin.exe",
+    "%ProgramData%\\PyMOL\\PyMOLWin.exe",
 ]
 
 if (opSystem == "linux") or (opSystem == "darwin"):
