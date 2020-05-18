@@ -360,7 +360,7 @@ def surface(sPid=0, optName=""):
 
     command = quotedPath(command)
     launch(exeName=command)
-
+    time.sleep(2)
     bpy.ops.import_scene.x3d(filepath=homePath + "tmp" + os.sep + "tmp.wrl", axis_forward="Y", axis_up="Z")
     try:
         ob = bpy.data.objects['Shape_IndexedFaceSet']
