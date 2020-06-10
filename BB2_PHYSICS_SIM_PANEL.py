@@ -162,7 +162,7 @@ def geStart():
         bpy.data.scenes["Scene"].game_settings.use_animation_record = True
 
     bpy.ops.view3d.game_start()
-    recorder()
+    
     bpy.context.scene.render.fps = tmpFPS
 
 # record physics engine movement to FCurve
