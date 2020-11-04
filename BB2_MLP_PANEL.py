@@ -310,7 +310,7 @@ def mlp(tID, force):
                 pyPath = "python"
             command = "%s %s -i %s -m %s -s %f -o %s -v" % (panel.quotedPath(pyPath), panel.quotedPath(homePath + "bin" + os.sep + "pyMLP-1.0" + os.sep + "pyMLP.py"), panel.quotedPath(homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "tmp.pdb"), method, spacing, panel.quotedPath(homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "tmp.dx"))
 
-            p = panel.launch(exeName=command, async=True)
+            p = panel.launch(exeName=command, asynchronous=True)
 
             print("PyMLP command succeded")
             panel.surface(sPid=tID, optName=namemlp)

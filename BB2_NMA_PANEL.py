@@ -130,18 +130,18 @@ def computeNormalModeTrajectories():
         if opSystem == "linux":
             command = "chmod 755 %s" % (panel.quotedPath(homePath + "bin" + os.sep + "nma" + os.sep + "nma.py"))
             command = panel.quotedPath(command)
-            p = panel.launch(exeName=command, async=False)
+            p = panel.launch(exeName=command, asynchronous=False)
         elif opSystem == "darwin":
             command = "chmod 755 %s" % (panel.quotedPath(homePath + "bin" + os.sep + "nma" + os.sep + "nma.py"))
             command = panel.quotedPath(command)
-            p = panel.launch(exeName=command, async=False)
+            p = panel.launch(exeName=command, asynchronous=False)
         else:
             pyPath = "python"
         command = "%s %s -i %s -o %s -m %d -r %f -n %d %s " % (
             panel.quotedPath(pyPath), panel.quotedPath(homePath + "bin" + os.sep + "nma" + os.sep + "nma.py"),
             panel.quotedPath(inputpath),
             panel.quotedPath(outputpath), mode, rmsd, nbconfiguration, struct)
-        p = panel.launch(exeName=command, async=False)
+        p = panel.launch(exeName=command, asynchronous=False)
         bpy.context.scene.BBImportPath = outputpath
         PDBIMPORT.importPreview()
     else:

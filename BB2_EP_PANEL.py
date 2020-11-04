@@ -293,7 +293,7 @@ def scenewideEP(animation):
             f.close()
             command = panel.quotedPath(homePath + "tmp" + os.sep + "apbs.exe") + " " + panel.quotedPath(
                 homePath + "tmp" + os.sep + "scenewide.in")
-        p = panel.launch(exeName=command, async=True)
+        p = panel.launch(exeName=command, asynchronous=True)
         print("APBS Ok")
 
         # sync

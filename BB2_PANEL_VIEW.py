@@ -410,7 +410,7 @@ def quotedPath(stringaInput):
 
 
 # launch app in separate process, for better performance on multithreaded computers
-def launch(exeName, async=False):
+def launch(exeName, asynchronous=False):
     # try to hide window (does not work recursively)
     if opSystem == "linux":
         istartupinfo = None
