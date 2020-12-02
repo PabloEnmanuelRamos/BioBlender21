@@ -107,7 +107,7 @@ class Elec:
         self.label = ""
         self.nlev = 4
         self.ofrac = 0.1
-        self.asynct = 0
+        self.async = 0
         self.asyncflag = asyncflag
         self.cgcent = "mol 1"
         self.fgcent = "mol 1"
@@ -157,7 +157,7 @@ class Elec:
             text += "    cgcent %s\n" % self.cgcent
             text += "    fgcent %s\n" % self.fgcent
             if self.asyncflag == 1:
-                text += "    asynct %i\n" % self.asynct
+                text += "    async %i\n" % self.async
         text += "    mol %i\n" % self.mol
         if self.lpbe:
             text += "    lpbe\n"
@@ -275,7 +275,7 @@ class Input:
                 outname = self.pqrpath[0:period] + "-PE%i.in" % i
                 for elec in self.elecs:
                     elec.asyncflag = 1
-                    elec.asynct = i
+                    elec.async = i
                 file = open(outname, "w")
                 file.write(str(self))
                 file.close()
@@ -332,7 +332,7 @@ def splitInput(filename):
     period = filename.find(".")
     for i in range(nproc):
         outname = filename[0:period] + "-PE%i.in" % i
-        outtext = text.replace("mg-para\n", "mg-para\n    asynct %i\n" % i)
+        outtext = text.replace("mg-para\n", "mg-para\n    async %i\n" % i)
         outfile = open(outname, "w")
         outfile.write(outtext)
         outfile.close()
@@ -345,7 +345,7 @@ def usage():
     size = Pz.Psize()
     usage = "\n"
     usage = usage + "Use this script to generate new APBS input files or split an existing\n"
-    usage = usage + "parallel input file into multiple asynct files.\n\n"
+    usage = usage + "parallel input file into multiple async files.\n\n"
     usage = usage + "Usage: inputgen.py [opts] <filename>\n"
     usage = usage + "Optional Arguments:\n"
     usage = usage + "  --help               : Display this text\n"
@@ -404,7 +404,7 @@ def main():
 
     method = ""
     size = Pz.Psize()
-    asynct = 0
+    async = 0
     split = 0
     istrng = 0
     potdx = 0
@@ -421,10 +421,10 @@ def main():
             elif a == "auto":
                 sys.stdout.write("Forcing a sequential calculation\n")
                 method = "mg-auto"
-            elif a == "asynct":
+            elif a == "async":
                 sys.stdout.write("Forcing an asynchronous calculation\n")
                 method = "mg-para"
-                asynct = 1
+                async = 1
             elif a == "manual":
                 sys.stdout.write("Forcing a manual calculation\n")
                 method = "mg-manual"
@@ -450,7 +450,7 @@ def main():
         splitInput(filename)
     else:
         size.runPsize(filename)
-        input = Input(filename, size, method, asynct, istrng, potdx)
+        input = Input(filename, size, method, async, istrng, potdx)
         input.printInputFiles()
 
 

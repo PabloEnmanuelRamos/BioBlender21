@@ -1,4 +1,4 @@
-# Blender modules
+# 2020-03-28
 import bpy
 from bpy import *
 import bpy.path
@@ -25,25 +25,23 @@ import traceback
 import copy
 
 from .BioBlender2 import *
-from .BB2_PANEL_VIEW import *
+from . import BB2_PANEL_VIEW as panel
+from .BB2_PHYSICS_SIM_PANEL import *
+from .BB2_MLP_PANEL import *
+from .BB2_PDB_OUTPUT_PANEL import *
+from .BB2_OUTPUT_PANEL import *
+from .BB2_NMA_PANEL import *
+from .BB2_EP_PANEL import *
 
 
 # ==================================================================================================================
-# ==================================================================================================================
-# ==================================================================================================================
-global SetKeyFrame
-SetKeyFrame = []
-
-
 def bootstrapping():
     print("Bootstrapping")
     # Gravity, rendering engine
-    bpy.context.scene.render.engine = 'BLENDER_WORKBENCH'
-    bpy.context.scene.gravity = 0.0, 0.0, 0.0
-    bpy.context.scene.render.engine = 'BLENDER_EEVEE'
+    bpy.context.scene.render.engine = 'BLENDER_GAME'
+    bpy.context.scene.game_settings.physics_gravity = 0.0
+    bpy.context.scene.render.engine = 'BLENDER_RENDER'
     # Materials
-    if not bpy.data.objects.keys():
-        bpy.ops.object.light_add(type='SUN', radius=1, align='WORLD', location=(0, 0, 50.0))
     elencoMateriali = [CA, H, N, O, S, ZN, P, FE, MG, MN, CU, NA, K, CL, F]
     if not ("C" in bpy.data.materials):
         bpy.ops.material.new()
@@ -56,10 +54,19 @@ def bootstrapping():
             bpy.data.materials[m].diffuse_color = color[m]
     create_fi_materials()
     # get next PDB ID
-
     global pdbID
     pdbID = getNewPDBid()
-    # EmptySet (Hemi, BBCamera)
+    selectedLayer = 0
+    tmpp = 0
+    for x in bpy.context.scene.BBLayerImport:
+        if x and (tmpp != 19):
+            selectedLayer = tmpp
+        tmpp += 1
+    bpy.context.scene.layers[selectedLayer] = True
+    for i in range(0, 20):
+        bpy.context.scene.layers[i] = False
+        if i == selectedLayer:
+            bpy.context.scene.layers[i] = True
 
     elementiDaImportare = ['Empty', 'Hemi']
     try:
@@ -71,10 +78,10 @@ def bootstrapping():
         raise Exception("Problem in import EmptySet.blend: ", E)
     bootstrap = 2
     bpy.ops.object.select_all(action="DESELECT")
-    for o in bpy.data.objects:
-        o.select_set(False)
-        if o.name == 'Hemi':
-            o.select_set(True)
+    for ob in bpy.data.objects:
+        ob.select = False
+        if ob.name == 'Hemi':
+            ob.select = True
     bpy.ops.object.delete()
 
 
@@ -101,8 +108,7 @@ def create_fi_materials():
                     bpy.data.materials['C.001'].name = "matlipo_" + str(valuecolor)
                     bpy.data.materials["matlipo_" + str(valuecolor)].diffuse_color = [float(valuecolor),
                                                                                       float(valuecolor),
-                                                                                      float(valuecolor),
-                                                                                      1.0]
+                                                                                      float(valuecolor)]
                     dic_lipo_materials[str(valuecolor)] = "matlipo_" + str(valuecolor)
     except Exception as E:
         raise Exception("Unable to create lipo materials", E)
@@ -126,7 +132,109 @@ def retrieve_fi_materials(am_name, at_name):
     material_name = dic_lipo_materials[material_value]
     return material_name
 
-class bb2_OT_operator_import(bpy.types.Operator):
+
+# ==================================================================================================================
+# ==================================================================================================================
+# ==================================================================================================================
+global SetKeyFrame
+SetKeyFrame = []
+
+importReady = False
+
+
+class BB2_GUI_PDB_IMPORT(bpy.types.Panel):
+    bl_idname = "BB2_GUI_PDB_IMPORT"
+    bl_label = "BioBlender 2 PDB import"
+    bl_space_type = "PROPERTIES"
+    bl_region_type = "WINDOW"
+    bl_context = "scene"
+    bl_options = {'DEFAULT_CLOSED'}
+    bpy.types.Scene.BBDeltaFrame = bpy.props.IntProperty(attr="BBDeltaFrame", name="Keyframe Interval",
+                                                         description="The number of in-between frames between each model for animation",
+                                                         default=100, min=1, max=200, soft_min=5, soft_max=50)
+    bpy.types.Scene.BBLayerImport = bpy.props.BoolVectorProperty(attr="BBLayerImport", size=20, subtype='LAYER',
+                                                                 name="Import on Layer", description="Import on Layer")
+    bpy.types.Scene.BBImportPath = bpy.props.StringProperty(attr="BBImportPath", description="", default="",
+                                                            subtype="FILE_PATH")
+    bpy.types.Scene.BBModelRemark = bpy.props.StringProperty(attr="BBModelRemark",
+                                                             description="Model name tag for multiple imports",
+                                                             default="protein0")
+    bpy.types.Scene.BBImportFeedback = bpy.props.StringProperty(attr="BBImportFeedback", description="Import Feedback",
+                                                                default="")
+    bpy.types.Scene.BBImportChain = bpy.props.StringProperty(attr="BBImportChain", description="Import Chain",
+                                                             default="")
+    bpy.types.Scene.BBImportChainOrder = bpy.props.StringProperty(attr="BBImportChainOrder",
+                                                                  description="List of chains to be imported",
+                                                                  default="")
+    bpy.types.Scene.BBImportOrder = bpy.props.StringProperty(attr="BBImportOrder",
+                                                             description="List of models to be imported", default="")
+    bpy.types.Scene.BBImportHydrogen = bpy.props.BoolProperty(attr="BBImportHydrogen", name="Import Hydrogen",
+                                                              description="Import hydrogen atoms (Slower)",
+                                                              default=False)
+
+    # ================
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        split = layout.split(percentage=0.7)
+        split.prop(scene, "BBImportPath", text="")
+        split.operator("ops.bb2_operator_make_preview")
+        row = layout.row()
+        row.prop(scene, "BBModelRemark", text="")
+        row = layout.row()
+        row.prop(scene, "BBImportFeedback", text="", emboss=False)
+        row = layout.row()
+        split = layout.split(percentage=0.7)
+        col = split.column()
+        col.prop(scene, "BBImportOrder", text="")
+        col = split.column()
+        col.prop(scene, "BBDeltaFrame")
+        row = layout.row()
+        row.prop(scene, "BBImportChain", text="", emboss=False)
+        row = layout.row()
+        row.prop(scene, "BBImportChainOrder", text="")
+        row = layout.row()
+        row.prop(scene, "BBLayerImport")
+        row = layout.row()
+        row.prop(scene, "BBImportHydrogen")
+        row = layout.row()
+        row.scale_y = 2
+        if importReady:
+            row.operator("ops.bb2_operator_import")
+        else:
+            row.active = False
+            row.operator("ops.bb2_operator_import", text="Error: Not Ready to Import", icon="X")
+
+
+class bb2_operator_make_preview(types.Operator):
+    bl_idname = "ops.bb2_operator_make_preview"
+    bl_label = "Make Preview"
+    bl_description = "Make Preview"
+
+    def invoke(self, context, event):
+        try:
+            if bootstrap == -1:
+                bootstrapping()
+            global importReady
+            importReady = False
+            bpy.context.scene.BBImportFeedback = ""
+            bpy.context.scene.BBImportChain = ""
+            bpy.context.scene.BBImportOrder = ""
+            bpy.context.scene.BBImportChainOrder = ""
+            importReady = importPreview(retrieved=False)
+            print("Import Ready: " + str(importReady))
+        except Exception as E:
+            s = "Import Failed 1: " + str(E)
+            print(s)
+            return {'CANCELLED'}
+        else:
+            return {'FINISHED'}
+
+
+bpy.utils.register_class(bb2_operator_make_preview)
+
+
+class bb2_operator_import(types.Operator):
     bl_idname = "ops.bb2_operator_import"
     bl_label = "Import PDB"
     bl_description = "generate 3D Model"
@@ -135,9 +243,9 @@ class bb2_OT_operator_import(bpy.types.Operator):
         try:
             if bootstrap == 0:
                 bootstrap()
-            bpy.context.preferences.edit.use_global_undo = False
+            bpy.context.user_preferences.edit.use_global_undo = False
             core_importFile()
-            bpy.context.preferences.edit.use_global_undo = True
+            bpy.context.user_preferences.edit.use_global_undo = True
         except Exception as E:
             s = "Import Failed 2: " + str(E)
             print(s)
@@ -146,10 +254,9 @@ class bb2_OT_operator_import(bpy.types.Operator):
             return {'FINISHED'}
 
 
-bpy.utils.register_class(bb2_OT_operator_import)
+bpy.utils.register_class(bb2_operator_import)
 
 
-# validate and get the number of models in the BBImportOrder string
 def getNumModel():
     try:
         tmpPDBmodelsList = [int(tmpPDBmodelsBBio) for tmpPDBmodelsBBio in bpy.context.scene.BBImportOrder.split(',')]
@@ -242,14 +349,14 @@ def importPreview(verbose=False, retrieved=False):
 # retrieve PDB from pdb.org
 def pdbdotorg(id):
     print("pdbdotorg")
-    url1 = str("http://www.pdb.org/pdb/files/" + id + ".pdb")
+    url1 = str("https://www.rcsb.org/pdb/files/" + id + ".pdb")
     save1 = str(homePath + "fetched" + os.sep + id + ".pdb")
     if opSystem == "linux":
-        if not os.path.isdir(quotedPath(homePath + "fetched")):
-            os.mkdir(quotedPath(homePath + "fetched"))
+        if not os.path.isdir(panel.quotedPath(homePath + "fetched")):
+            os.mkdir(panel.quotedPath(homePath + "fetched"))
     elif opSystem == "darwin":
-        if not os.path.isdir(quotedPath(homePath + "fetched")):
-            os.mkdir(quotedPath(homePath + "fetched"))
+        if not os.path.isdir(panel.quotedPath(homePath + "fetched")):
+            os.mkdir(panel.quotedPath(homePath + "fetched"))
     else:
         if not os.path.isdir(r"\\?\\" + homePath + "fetched"):
             os.mkdir(r"\\?\\" + homePath + "fetched")
@@ -264,7 +371,7 @@ def pdbdotorg(id):
 
 
 class PDBString(str):
-    print("PDB String 1")
+    print("PDB String")
 
     # Parses PDB line using column attribute
     # file definition is taken from www.wwpdb.org/documentation/format32/sect9.html
@@ -300,8 +407,8 @@ def core_importFile():
     print("core_import_File")
     bpy.ops.object.select_all(action="DESELECT")
     for o in bpy.data.objects:
-        o.select_set(False)
-    bpy.context.view_layer.objects.active = None
+        o.select = False
+    bpy.context.scene.objects.active = None
     tmpFilePath = abspath(bpy.context.scene.BBImportPath)
     extension = tmpFilePath.lower().endswith
     if getNumModel() == -1:
@@ -455,6 +562,20 @@ def core_parseTXT(filePath):
 
 def core_sort_hr():
     print("core_sort_hr")
+    # ======= IMPORT ON SELECTED LAYER = START =======================
+    selectedLayer = 0
+    tmp = 0
+    for x in bpy.context.scene.BBLayerImport:
+        if x and (tmp != 19):
+            selectedLayer = tmp
+        tmp += 1
+    bpy.context.scene.layers[selectedLayer] = True
+    for i in range(0, 20):
+        bpy.context.scene.layers[i] = False
+        if i == selectedLayer:
+            bpy.context.scene.layers[i] = True
+
+    # ======= IMPORT ON SELECTED LAYER = END =========================
     # loading the Atom from library.blend
     try:
         objName = "atom"
@@ -463,14 +584,14 @@ def core_sort_hr():
         append_file_to_current_blend(Path, objName, Directory)
 
         bpy.data.objects[objName].name = objName
-        bpy.data.objects[objName].select_set(True)
-        bpy.context.view_layer.objects.active = bpy.data.objects[objName]
+        bpy.data.objects[objName].select = True
+        bpy.context.scene.objects.active = bpy.data.objects[objName]
 
     except Exception as E:
         raise Exception("Template atom object cannot be loaded from library: ", E)
     # Make high res atom model
     bpy.ops.object.modifier_add(type='SUBSURF')
-    modificatore = bpy.context.view_layer.objects.active.modifiers[0]
+    modificatore = bpy.context.scene.objects.active.modifiers[0]
     modificatore.levels = 1
     modificatore.render_levels = 1
     modificatore.name = "SubSurf1"
@@ -484,14 +605,13 @@ Frame = {}
 
 def core_createModels():
     print("core_create_Models")
-    # Empty creation
     bpy.ops.object.empty_add(type='PLAIN_AXES')
-    bpy.context.view_layer.objects.active.name = copy.copy(str(bpy.context.scene.BBModelRemark))
+    bpy.context.scene.objects.active.name = copy.copy(str(bpy.context.scene.BBModelRemark))
     parentEmpty = bpy.data.objects[str(bpy.context.scene.BBModelRemark)]
-    bpy.context.view_layer.objects.active.bb2_pdbID = copy.copy(str(pdbID))
-    bpy.context.view_layer.objects.active.bb2_objectType = "PDBEMPTY"
-    bpy.context.view_layer.objects.active.bb2_outputOptions = "1"
-    bpy.context.view_layer.objects.active.bb2_pdbPath = copy.copy(str(bpy.context.scene.BBImportPath))
+    bpy.context.scene.objects.active.bb2_pdbID = copy.copy(str(pdbID))
+    bpy.context.scene.objects.active.bb2_objectType = "PDBEMPTY"
+    bpy.context.scene.objects.active.bb2_outputOptions = "1"
+    bpy.context.scene.objects.active.bb2_pdbPath = copy.copy(str(bpy.context.scene.BBImportPath))
     bpy.data.objects[str(bpy.context.scene.BBModelRemark)].location = (0.0, 0.0, 0.0)
     FinalFrame = bpy.data.scenes["Scene"].frame_end
     global chainCache
@@ -509,15 +629,15 @@ def core_createModels():
         # reset
         bpy.ops.object.select_all(action="DESELECT")
         for o in bpy.data.objects:
-            o.select_set(False)
-        bpy.context.view_layer.objects.active = None
+            o.select = False
+        bpy.context.scene.objects.active = None
         bpy.context.scene.frame_set(curFrame)
         # on first model, Place atoms in scene
         if curFrame == 1:
             modelCopy = model.copy()
             # select and temporary rename template atom
-            bpy.data.objects["atom"].hide_viewport = False
-            bpy.data.objects["atom"].select_set(True)
+            bpy.data.objects["atom"].hide = False
+            bpy.data.objects["atom"].select = True
             bpy.data.objects["atom"].name = str(id)
             # (count - 1) because there is the original template object.
             for i in range(len(model) - 1):
@@ -535,13 +655,13 @@ def core_createModels():
                         obj.material_slots[0].material = bpy.data.materials[index]
                         # adjust radius
                         obj.scale = [scale_cov[index][0], scale_cov[index][0], scale_cov[index][0]]
-                        #obj.game.radius = scale_cov[index][1]
+                        obj.game.radius = scale_cov[index][1]
                         # add atom info as RNA string to each object
                         obj.BBInfo = str(entry[1])
                         obj.bb2_pdbID = copy.copy(str(pdbID))
                         obj.bb2_objectType = "ATOM"
                         # Setting EMPTY as parent for this object
-                        obj.select_set(True)
+                        obj.select = True
                         obj.parent = bpy.data.objects[str(parentEmpty.name)]
                 Frame[parentEmpty.name] = 0
             except Exception as E:
@@ -645,13 +765,12 @@ def core_createModels():
         try:
             for key, line in ((pdbIDmodelsDictionary[pdbID])[m]).items():
                 OBJ = bpy.data.objects[key]
-                OBJ.select_set(True)
+                OBJ.select = True
                 OBJ.location = line.get("loc")
         except Exception as E:
             raise Exception("Unable to place 3D atoms:", E)
 
         if len(pdbIDmodelsDictionary[pdbID]) != 1:
-            # insert keyframe for animations
             try:
                 bpy.ops.anim.keyframe_insert_menu(type='LocRotScale')
             except Exception as E:
@@ -826,7 +945,6 @@ def bondLookUp_NucleicMain(atom, amac):  # define skeleton atoms
     return parent
 
 
-# I suppose that the object's referential was not change (the same as the scene, with x (red axis) to the right, z (blue axis) up and y (green axis) behing)
 def addRigidBodyRotamer(objectparent, objecttarget):
     # Add the rigid body joint for rotamer
     # to define a rotamer, an hinge is use, with the axis vector which come from the atom parent to the target and with a position at the center of the parent atom
@@ -841,42 +959,16 @@ def addRigidBodyRotamer(objectparent, objecttarget):
     matrot = Matrix.Rotation(angle2mapx2hingevector, 3, rotvec2mapx2hingevector)
     euler = matrot.to_euler()
     # Add the rigid body join for rotamer
-    #bpy.data.scenes["Scene"].rigidbody_world.enabled = True
-    #bpy.context.view_layer.objects.active = objectparent
-    #bpy.ops.rigidbody.constraint_add()
-    #objectparent.rigid_body_constraint.type = 'HINGE'
-    #objectparent.rigid_body_constraint.object1 = objecttarget
-    #objectparent.rigid_body_constraint.disable_collisions = True
-
-    """objectparent.constraints.new("PIVOT")
-    objectparent.constraints["Pivot"].target = objecttarget
+    objectparent.constraints["RigidBody Joint"].target = objecttarget
     # objectparent.constraints["RigidBody Joint"].show_pivot = True
-    objectparent.constraints["Pivot"].offset[0] = 0.0
-    objectparent.constraints["Pivot"].offset[1] = 0.0
-    objectparent.constraints["Pivot"].offset[2] = 0.0
-    #objectparent.constraints["Pivot"].offset[1] = euler[0]
-    #objectparent.constraints["Pivot"].offset[2] = euler[1]
-    #objectparent.constraints["Pivot"].offset[3] = euler[2]
-    objectparent.rotation_axis_angle = (euler[0], euler[1], euler[2], 0.0)
+    objectparent.constraints["RigidBody Joint"].pivot_x = 0.0
+    objectparent.constraints["RigidBody Joint"].pivot_y = 0.0
+    objectparent.constraints["RigidBody Joint"].pivot_z = 0.0
+    objectparent.constraints["RigidBody Joint"].axis_x = euler[0]
+    objectparent.constraints["RigidBody Joint"].axis_y = euler[1]
+    objectparent.constraints["RigidBody Joint"].axis_z = euler[2]
 
 
-    #bpy.context.view_layer.objects.active = objectparent
-   # bpy.ops.rigidbody.object_add()
-   # bpy.ops.rigidbody.constraint_add()
-    #objectparent.rigid_body_constraint.object1 = objecttarget
-    #objectparent.rotation_euler = (euler[0], euler[1], euler[2])
-    #bpy.context.view_layer.objects.active = None
-    # Add the rigid body join for rotamer
-    #objectparent.constraints["Pivots"].target = objecttarget
-    # objectparent.constraints["RigidBody Joint"].show_pivot = True
-    #objectparent.constraints["Pivots"].pivot_x = 0.0
-    #objectparent.constraints["Pivots"].pivot_y = 0.0
-    #objectparent.constraints["Pivots"].pivot_z = 0.0
-    #objectparent.constraints["Pivots"].axis_x = euler[0]
-    #objectparent.constraints["Pivots"].axis_y = euler[1]
-    #objectparent.constraints["Pivots"].axis_z = euler[2]
-   """
-# objectparent.rotation_mode='XYZ'
 
 
 def core_EmptyChainsCreation():
@@ -889,12 +981,12 @@ def core_EmptyChainsCreation():
                 if tmpChain not in chainsList:
                     # Creo la Empty, con le opportune proprieta'
                     bpy.ops.object.empty_add(type='PLAIN_AXES')
-                    bpy.context.view_layer.objects.active.name = copy.copy(str(bpy.context.scene.BBModelRemark))
-                    bpy.context.view_layer.objects.active.bb2_pdbID = copy.copy(str(pdbID))
-                    bpy.context.view_layer.objects.active.bb2_objectType = "CHAINEMPTY"
-                    bpy.context.view_layer.objects.active.bb2_subID = copy.copy(str(tmpChain))
-                    bpy.context.view_layer.objects.active.location = ((0.0, 0.0, 0.0))
-                    tmpName = copy.copy(str(bpy.context.view_layer.objects.active.name))
+                    bpy.context.scene.objects.active.name = copy.copy(str(bpy.context.scene.BBModelRemark))
+                    bpy.context.scene.objects.active.bb2_pdbID = copy.copy(str(pdbID))
+                    bpy.context.scene.objects.active.bb2_objectType = "CHAINEMPTY"
+                    bpy.context.scene.objects.active.bb2_subID = copy.copy(str(tmpChain))
+                    bpy.context.scene.objects.active.location = ((0.0, 0.0, 0.0))
+                    tmpName = copy.copy(str(bpy.context.scene.objects.active.name))
                     cE = bpy.data.objects[tmpName]
                     # imposto la Empty come figlia della Parent Empty
                     for d in bpy.data.objects:
@@ -920,52 +1012,34 @@ def core_EmptyChainsCreation():
 def PDBAddress():
     return Address
 
-
 def core_cleaningUp():
     print("cleaning up")
     bpy.context.scene.frame_set(1)
-    global pdbID
-   # for area in bpy.context.screen.areas:
-       # if area.type == 'VIEW_3D':
-          #  area.spaces[0].show_relationship_lines = False
-    #try:
-        #atomAction()
-    #except Exception as E:
-        #print("No models, no action" + str(E))
+    bpy.ops.object.select_all(action="DESELECT")
+    for o in bpy.data.objects:
+        o.select = False
+
+    for area in bpy.context.screen.areas:
+        if area.type == 'VIEW_3D':
+            area.spaces[0].show_relationship_lines = False
+
+    try:
+        atomAction()
+    except Exception as E:
+        print("No models, no action")
 
     bpy.ops.object.select_all(action="DESELECT")
     for o in bpy.data.objects:
-        o.select_set(False)
-        if o.bb2_objectType == 'ATOM' and o.bb2_pdbID == str(pdbID):
-            bpy.context.view_layer.objects.active = o
-            o.select_set(True)
-            bpy.ops.object.mode_set(mode='EDIT')
-            bpy.ops.object.mode_set(mode='OBJECT')
-            o.select_set(False)
-            break
-
-    bpy.ops.object.select_all(action="DESELECT")
-    for o in bpy.data.objects:
-        if o.bb2_pdbPath and o.bb2_objectType == 'PDBEMPTY' and o.bb2_pdbID == str(pdbID) :
-            bpy.context.view_layer.objects.active = o
-            bpy.context.view_layer.objects.active.hide_set(True)
-            o.select_set(False)
-            break
-        o.select_set(False)
-    bpy.ops.object.select_all(action="DESELECT")
-
-    bpy.context.view_layer.objects.active = None
-    bpy.data.objects['BioBlender_Camera'].select_set(True)
-    bpy.data.objects['BioBlender_Camera'].location[1] = 70
-    bpy.data.objects['BioBlender_Camera'].rotation_euler[2] = 3.14159
-    bpy.context.view_layer.objects.active = bpy.data.objects['BioBlender_Camera']
+        o.select = False
+    bpy.data.objects['BioBlender_Camera'].select = True
+    bpy.context.scene.objects.active = bpy.data.objects['BioBlender_Camera']
     bpy.context.scene.camera = bpy.data.objects["BioBlender_Camera"]
     for area in bpy.context.screen.areas:
         if area.type == 'VIEW_3D':
             area.spaces[0].region_3d.view_perspective = "CAMERA"
 
-    pdbID = pdbID + 1  # VERY IMPORTANT!!!
-    print("pdbID: " + str(pdbID))
+    pdbid = pdbID + 1
+    print("pdbID: " + str(pdbid))
 
     sessionSave()
     bpy.context.scene.BBImportPath = ""
@@ -985,13 +1059,13 @@ def atomAction():
     print("atom_action")
     for obj in bpy.data.objects:
         if obj.BBInfo:
-            obj.select_set(True)
-            bpy.context.view_layer.objects.active = obj
+            obj.select = True
+            bpy.context.scene.objects.active = obj
             actionName = str(obj.name + "Action")
             if actionName in bpy.data.actions.keys():
                 obj.game.actuators['F-Curve'].action = bpy.data.actions[actionName]
                 obj.game.actuators['F-Curve'].frame_end = bpy.data.actions[actionName].frame_range[1]
-            obj.select_set(False)
+            obj.select = False
 
 
 # Save the session variables to disk
@@ -1021,7 +1095,7 @@ def sessionLoad(verbose=False):
         try:
             with open(bpy.data.filepath + ".cache", "r") as filedump:
                 pdbIDmodelsDictionary = pickle.load(filedump)
-            select(bpy.data.objects[90].name)  # to select 'something' in the scene
+            panel.select(bpy.data.objects[90].name)  # to select 'something' in the scene
             print("Persistent session loaded")
         except Exception as E:
             print("Warning: Error when loading session cache:", E)

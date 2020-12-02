@@ -14,14 +14,11 @@ __copyright__ = "Copyright (c) 2006-2007 %s. All rights reserved." % __author__
 __licence__ = "BSD"
 __modifications__ = "SciVis <www.scivis.ifc.cnr.it> 2010. We introduced fi values for Hydrogens, sugars and nucleic acids and Testa formula"
 
-
 import sys
 import os
 import shutil
 import time
-print(sys.version)
 import numpy
-
 
 from optparse import OptionParser
 from pprint import pformat

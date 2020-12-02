@@ -2608,7 +2608,7 @@ def getRandom():
 
     URL = "ftp://ftp.rcsb.org/pub/pdb/data/structures/all/pdb/"
     pdblines = os.popen("ncftpls %s" % URL).readlines()
-    pdbline = pdblines.join()
+    pdbline = " ".join(pdblines)
     pdbline = pdbline.replace("\n", "")
     pdbline = pdbline.replace("@", "")
     pdbline = pdbline.strip()
