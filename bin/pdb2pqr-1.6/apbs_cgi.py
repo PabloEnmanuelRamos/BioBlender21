@@ -458,18 +458,18 @@ def generateForm(file, initVars, pdb2pqrID, type):
         print("value=\"%f\"" % initVars['processorMeshOverlap'])
     print("/></li><br />")
 
-    print("<li><input type=\"checkbox\" name=\"asyncflag\" onClick=toggle(\"async\") ")
+    print("<li><input type=\"checkbox\" name=\"asyncflag\" onClick=toggle(\"asynct\") ")
     if initVars['asyncflag']:
         print(" checked=\"checked\"")
     print(
-        """/> Perform the tasks in a parallel run asynchronously <a href=\"http://apbs.wustl.edu/MediaWiki/index.php/ELEC_input_file_section#async\" target=\"_blank\"><font title=\"asyncflag\">(<span class=\"tooltip\">?</span>)</font></a></li>""")
+        """/> Perform the tasks in a parallel run asynchronously <a href=\"http://apbs.wustl.edu/MediaWiki/index.php/ELEC_input_file_section#asynct\" target=\"_blank\"><font title=\"asyncflag\">(<span class=\"tooltip\">?</span>)</font></a></li>""")
     print("<blockquote>")
-    print("<div id=\"async\" style=\"display:none\">")
+    print("<div id=\"asynct\" style=\"display:none\">")
     print(
-        "<li>Rank for a processor to masquerade as <a href=\"http://apbs.wustl.edu/MediaWiki/index.php/ELEC_input_file_section#async\" target=\"_blank\"><font title=\"async\">(<span class=\"tooltip\">?</span>)</font></a>:")
-    print("<input type=\"text\" name=\"async\" size=\"10\" maxlength=\"20\"")
-    if 'async' in initVars:
-        print(" value=\"%i\"" % initVars['async'])
+        "<li>Rank for a processor to masquerade as <a href=\"http://apbs.wustl.edu/MediaWiki/index.php/ELEC_input_file_section#asynct\" target=\"_blank\"><font title=\"async\">(<span class=\"tooltip\">?</span>)</font></a>:")
+    print("<input type=\"text\" name=\"asynct\" size=\"10\" maxlength=\"20\"")
+    if 'asynct' in initVars:
+        print(" value=\"%i\"" % initVars['asynct'])
     print("/></li>")
     print("</blockquote>")
 
@@ -1215,7 +1215,7 @@ def unpickleVars(pdb2pqrID):
     apbsOptions['calculationType'] = myElec.method
     apbsOptions['dime'] = myElec.dime
     apbsOptions['pdime'] = myElec.pdime
-    apbsOptions['async'] = myElec.async
+    apbsOptions['asynct'] = myElec.asynct
     apbsOptions['asyncflag'] = myElec.asyncflag
     apbsOptions['nlev'] = myElec.nlev
     apbsOptions['glen'] = myElec.glen

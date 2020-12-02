@@ -26,82 +26,45 @@ import traceback
 import copy
 
 from .BioBlender2 import *
-from .BB2_PHYSICS_SIM_PANEL import *
 from . import BB2_PANEL_VIEW as panel
-from . import BB2_PDB_OUTPUT_PANEL as PDBOUT
 from . import BB2_GUI_PDB_IMPORT as PDBIMPORT
 from . import BB2_MLP_PANEL as MLP
 from .BB2_MLP_PANEL import *
-from .BB2_OUTPUT_PANEL import *
-from .BB2_NMA_PANEL import *
+from . import BB2_PDB_OUTPUT_PANEL as PDBOUT
+
+class bb2_OT_operator_ep_clear(types.Operator):
+    bl_idname = "ops.bb2_operator_ep_clear"
+    bl_label = "Clear EP"
+    bl_description = "Clear the EP Visualization"
+
+    def invoke(self, context, event):
+        try:
+            bpy.context.preferences.edit.use_global_undo = False
+            cleanEPObjs()
+            bpy.context.preferences.edit.use_global_undo = True
+            panel.todoAndviewpoints()
+        except Exception as E:
+            s = "Clear EP Visualization Failed: " + str(E)
+            print(s)
+            return {'CANCELLED'}
+        else:
+            return {'FINISHED'}
 
 
+bpy.utils.register_class(bb2_OT_operator_ep_clear)
 
-
-class BB2_EP_PANEL(types.Panel):
-    bl_label = "BioBlender2 EP Visualization"
-    bl_idname = "BB2_EP_PANEL"
-    bl_space_type = "PROPERTIES"
-    bl_region_type = "WINDOW"
-    bl_context = "scene"
-    bl_options = {'DEFAULT_CLOSED'}
-    bpy.types.Scene.BBForceField = bpy.props.EnumProperty(attr="BBForceField", name="ForceField",
-                                                          description="Select a forcefield type for EP calculation",
-                                                          items=(("0", "amber", ""),
-                                                                 ("1", "charmm", ""),
-                                                                 ("2", "parse", ""),
-                                                                 ("3", "tyl06", ""),
-                                                                 ("4", "peoepb", ""),
-                                                                 ("5", "swanson", "")),
-                                                          default="0")
-    bpy.types.Scene.BBEPIonConc = bpy.props.FloatProperty(attr="BBEPIonConc", name="Ion concentration",
-                                                          description="Ion concentration of the solvent", default=0.15,
-                                                          min=0.01, max=1, soft_min=0.01, soft_max=1)
-    bpy.types.Scene.BBEPGridStep = bpy.props.FloatProperty(attr="BBEPGridStep", name="Grid Spacing",
-                                                           description="EP Calculation step size (Smaller is better, but slower)",
-                                                           default=1, min=0.01, max=10, soft_min=0.5, soft_max=5)
-    bpy.types.Scene.BBEPMinPot = bpy.props.FloatProperty(attr="BBEPMinPot", name="Minimum Potential",
-                                                         description="Minimum Potential on the surface from which start the calculation of the field lines",
-                                                         default=0.0, min=0.0, max=10000, soft_min=0, soft_max=1000)
-    bpy.types.Scene.BBEPNumOfLine = bpy.props.FloatProperty(attr="BBEPNumOfLine", name="n EP Lines*eV/Å² ",
-                                                            description="Concentration of lines", default=0.05,
-                                                            min=0.01, max=0.5, soft_min=0.01, soft_max=0.1, precision=3,
-                                                            step=0.01)
-    bpy.types.Scene.BBEPParticleDensity = bpy.props.FloatProperty(attr="BBEPParticleDensity", name="Particle Density",
-                                                                  description="Particle Density", default=1, min=0.1,
-                                                                  max=10.0, soft_min=0.1, soft_max=5.0)
-
-    def draw(self, context):
-        scene = bpy.context.scene
-        layout = self.layout
-        split = layout.split()
-        c = split.column()
-        c.prop(scene, "BBForceField")
-        c = c.column(align=True)
-        c.label("Options:")
-        c.prop(scene, "BBEPIonConc")
-        c.prop(scene, "BBEPGridStep")
-        c.prop(scene, "BBEPMinPot")
-        c.prop(scene, "BBEPNumOfLine")
-        c.prop(scene, "BBEPParticleDensity")
-        c = split.column()
-        c.scale_y = 2
-        c.operator("ops.bb2_operator_ep")
-        c.operator("ops.bb2_operator_ep_clear")
-
-
-class bb2_operator_ep(types.Operator):
+class bb2_OT_operator_ep(types.Operator):
     bl_idname = "ops.bb2_operator_ep"
     bl_label = "Show EP"
     bl_description = "Calculate and Visualize Electric Potential"
 
     def invoke(self, context, event):
         try:
-            bpy.context.user_preferences.edit.use_global_undo = False
+            bpy.context.preferences.edit.use_global_undo = False
             cleanEPObjs()
             scenewideEP(animation=False)
             bpy.context.scene.BBViewFilter = "4"
-            bpy.context.user_preferences.edit.use_global_undo = True
+            bpy.context.preferences.edit.use_global_undo = True
             panel.todoAndviewpoints()
             if bpy.data.scenes["Scene"].frame_end < 280:
                 bpy.data.scenes["Scene"].frame_end = 280
@@ -113,29 +76,10 @@ class bb2_operator_ep(types.Operator):
             return {'FINISHED'}
 
 
-bpy.utils.register_class(bb2_operator_ep)
+bpy.utils.register_class(bb2_OT_operator_ep)
 
 
-class bb2_operator_ep_clear(types.Operator):
-    bl_idname = "ops.bb2_operator_ep_clear"
-    bl_label = "Clear EP"
-    bl_description = "Clear the EP Visualization"
 
-    def invoke(self, context, event):
-        try:
-            bpy.context.user_preferences.edit.use_global_undo = False
-            cleanEPObjs()
-            bpy.context.user_preferences.edit.use_global_undo = True
-            panel.todoAndviewpoints()
-        except Exception as E:
-            s = "Clear EP Visualization Failed: " + str(E)
-            print(s)
-            return {'CANCELLED'}
-        else:
-            return {'FINISHED'}
-
-
-bpy.utils.register_class(bb2_operator_ep_clear)
 
 
 # delete EP related objects
@@ -144,18 +88,18 @@ def cleanEPObjs(deletionList=None):
     bpy.ops.object.select_all(action="DESELECT")
     for o in bpy.data.objects:
         if o.name == "Empty_Lines":
-            o.select = True
+            o.select_set(True)
         else:
-            o.select = False
+            o.select_set(False)
     # use deletionList if supplied
     if deletionList:
         for obj in deletionList:
-            obj.select = True
+            obj.select_set(True)
     # otherwise delete everything in EPOBJ list
     else:
         for list in epOBJ:
             for obj in list:
-                obj.select = True
+                obj.select_set(True)
         epOBJ = []
     # call delete operator
     bpy.ops.object.delete()
@@ -293,7 +237,7 @@ def scenewideEP(animation):
             f.close()
             command = panel.quotedPath(homePath + "tmp" + os.sep + "apbs.exe") + " " + panel.quotedPath(
                 homePath + "tmp" + os.sep + "scenewide.in")
-        p = panel.launch(exeName=command, async=True)
+        p = panel.launch(exeName=command, asynct=True)
         print("APBS Ok")
 
         # sync
@@ -440,7 +384,13 @@ def scenewideEP(animation):
         epOBJ.append(list)
 
         ob = panel.select("Emitter")
-
+        try:
+            print("ASD")
+            #bpy.data.particles["ParticleSettings"].render_type = 'COLLECTION'
+            #bpy.data.particles["ParticleSettings"].instance_collection = bpy.data.collections["Particle"]
+            #bpy.data.particles["ParticleSettings"].particle_size = 0.76
+        except Exception as E:
+            print("Error Select Collection as Particle" + str(E))
 
         print("Current frame before if animation: " + str(bpy.context.scene.frame_current))
         if not animation:
@@ -452,18 +402,18 @@ def scenewideEP(animation):
             if "SCENEWIDESURFACE.001" in bpy.data.objects.keys():
                 bpy.ops.object.select_all(action="DESELECT")
                 for o in bpy.data.objects:
-                    o.select = False
-                bpy.context.scene.objects.active = None
-                bpy.data.objects['SCENEWIDESURFACE.001'].select = True
-                bpy.context.scene.objects.active = bpy.data.objects['SCENEWIDESURFACE.001']
+                    o.select_set(False)
+                bpy.context.view_layer.objects.active = None
+                bpy.data.objects['SCENEWIDESURFACE.001'].select_set(True)
+                bpy.context.view_layer.objects.active = bpy.data.objects['SCENEWIDESURFACE.001']
                 bpy.ops.object.delete(use_global=False)
             if "SCENEWIDESURFACE" in bpy.data.objects.keys():
                 bpy.ops.object.select_all(action="DESELECT")
                 for o in bpy.data.objects:
-                    o.select = False
-                bpy.context.scene.objects.active = None
-                bpy.data.objects['SCENEWIDESURFACE'].select = True
-                bpy.context.scene.objects.active = bpy.data.objects['SCENEWIDESURFACE']
+                    o.select_set(False)
+                bpy.context.view_layer.objects.active = None
+                bpy.data.objects['SCENEWIDESURFACE'].select_set(True)
+                bpy.context.view_layer.objects.active = bpy.data.objects['SCENEWIDESURFACE']
                 bpy.ops.object.delete(use_global=False)
         except Exception as E:
             print("Warning: SCENEWIDESURFACE removing not performed properly: "
@@ -476,26 +426,36 @@ def importEP(path,animation=False):
     global curveCount
     global objList
     lin = False
-
-    for o in bpy.data.objects:
-        if "Empty_Lines" == o.name:
-            parentEmpty = o.name
-            lin = True
-            break
+    if "Empty_Lines" in bpy.data.objects.keys():
+        parentEmpty = "Empty_Lines"
+        lin = True
 
     if lin == False:
+        #print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+        #bpy.ops.mesh.primitive_uv_sphere_add(enter_editmode=False, align='WORLD', location=(0, 0, 0), radius=1)
+        #bpy.ops.object.move_to_collection(collection_index=0, is_new=True, new_collection_name="Particle")
+        #print("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB")
         bpy.ops.object.empty_add(type='PLAIN_AXES')
-        bpy.context.scene.objects.active.name = "Empty_Lines"
-        bpy.context.scene.objects.active.bb2_objectType = "CHAINEMPTY"
-        bpy.context.scene.objects.active.location = ((0.0, 0.0, 0.0))
-        parentEmpty = bpy.context.scene.objects.active.name
-
+        bpy.context.view_layer.objects.active.name = "Empty_Lines"
+        bpy.context.view_layer.objects.active.bb2_objectType = "CHAINEMPTY"
+        bpy.context.view_layer.objects.active.location = ((0.0, 0.0, 0.0))
+        parentEmpty = bpy.context.view_layer.objects.active.name
 
     curveCount = 0
     scene = bpy.context.scene
     pts = []
     objList = []
-    # read the file once to generate curves
+    try:
+        materialparticle = bpy.data.materials["Particles"]
+    except Exception as E:
+        # read the file once to generate curves
+        Directory = homePath + "data" + os.sep + "Particle.blend" + os.sep + "Material" + os.sep
+        Path = os.sep + os.sep + "data" + os.sep + "Particle.blend" + os.sep + "Material" + os.sep + "Particle"
+        objName = "Particle"
+
+        append_file_to_current_blend(Path, objName, Directory)
+
+
     with open(path, "r") as file:
         for file_line in file:
             line = file_line.split()
@@ -504,9 +464,12 @@ def importEP(path,animation=False):
                     # for every n encountered creates a new curve
                     cu = bpy.data.curves.new("Curve%3d" % curveCount, "CURVE")
                     ob = bpy.data.objects.new("CurveObj%3d" % curveCount, cu)
-
-                    bpy.context.scene.objects.link(ob)
-                    bpy.context.scene.objects.active = ob
+                    for x in bpy.data.collections:
+                        if x.name == 'Collection':
+                            coll = x
+                            coll.objects.link(ob)
+                    #bpy.context.scene.objects.link(ob)
+                    bpy.context.view_layer.objects.active = ob
                     # set all the properties of the curve
                     spline = cu.splines.new("NURBS")
                     cu.dimensions = "3D"
@@ -518,11 +481,50 @@ def importEP(path,animation=False):
                     ob.field.type = "GUIDE"
                     ob.field.use_max_distance = True
                     ob.field.distance_max = 0.05
-                    ob.parent = bpy.data.objects[parentEmpty]
                     # objList keeps a list of all EP related objects for easy deletion
+                    ob.parent = bpy.data.objects[parentEmpty]
                     objList.append(ob)
+                    #New
+                    ob.data.bevel_depth = 0.01
+                    ob.data.bevel_resolution = 0
+                    ob.data.materials.append(bpy.data.materials["Particle"])
+                    bpy.context.view_layer.objects.active = ob
+                    ob.data.bevel_factor_start = 0
+                    ob.data.bevel_factor_end = 0
+                    try:
+                        fin = bpy.context.scene.frame_end
+                        start = bpy.context.scene.frame_start
+                        if not animation:
+                            while(start < fin):
+                                ob.data.bevel_factor_start = 0
+                                ob.data.bevel_factor_end = 0
+                                ob.data.keyframe_insert("bevel_factor_start", index=- 1, frame=start, group='')
+                                ob.data.keyframe_insert("bevel_factor_end", index=- 1, frame=start, group='')
+                                ob.data.bevel_factor_start = 0
+                                ob.data.bevel_factor_end = 1
+                                ob.data.keyframe_insert("bevel_factor_start", index=- 1, frame=start + 10, group='')
+                                ob.data.keyframe_insert("bevel_factor_end", index=- 1, frame=start + 10, group='')
+                                ob.data.bevel_factor_start = 1
+                                ob.data.bevel_factor_end = 1
+                                ob.data.keyframe_insert("bevel_factor_start", index=- 1, frame=start + 20, group='')
+                                ob.data.keyframe_insert("bevel_factor_end", index=- 1, frame=start + 20, group='')
+                                start = start + 22
+                        if animation:
+                            ob.data.bevel_factor_start = 0
+                            ob.data.bevel_factor_end = 0
+                            ob.data.keyframe_insert("bevel_factor_start", index=- 1, frame=bpy.context.scene.frame_current, group='')
+                            ob.data.keyframe_insert("bevel_factor_end", index=- 1, frame=bpy.context.scene.frame_current, group='')
+                            ob.data.bevel_factor_start = 0
+                            ob.data.bevel_factor_end = 1
+                            ob.data.keyframe_insert("bevel_factor_start", index=- 1, frame=bpy.context.scene.frame_current + 10, group='')
+                            ob.data.keyframe_insert("bevel_factor_end", index=- 1, frame=bpy.context.scene.frame_current + 10, group='')
+                            ob.data.bevel_factor_start = 1
+                            ob.data.bevel_factor_end = 1
+                            ob.data.keyframe_insert("bevel_factor_start", index=- 1, frame=bpy.context.scene.frame_current + 15, group='')
+                            ob.data.keyframe_insert("bevel_factor_end", index=- 1, frame=bpy.context.scene.frame_current + 15, group='')
+                    except Exception as E:
+                        print("Error Particle" + str(E))
                     pts = []
-
                 curveCount += 1
             elif line[0] == "v":
                 pts.append(float(line[1]))
@@ -538,7 +540,6 @@ def importEP(path,animation=False):
                     obj.name = "Emitter%d" % curveCount
 
     # read the file again to generate the particle emitter object
-
     with open(path, "r") as file:
         verts = []
         for line in file:
@@ -715,20 +716,19 @@ def scenewideSurface():
         f.write("quit")
     print("Making Surface using PyMOL")
 
-
     command = "%s -c -u %s" % (panel.quotedPath(pyMolPath), panel.quotedPath(homePath + "tmp" + os.sep + "surface.pml"))
 
     command = panel.quotedPath(command)
     panel.launch(exeName=command)
-    #time.sleep(2)
+
     bpy.ops.import_scene.x3d(filepath=homePath + "tmp" + os.sep + "scenewide.wrl", axis_forward="Y", axis_up="Z")
 
     try:
         ob = bpy.data.objects["Shape_IndexedFaceSet"]
         ob.name = "SCENEWIDESURFACE"
         ob.bb2_objectType = "SURFACE"
-        ob.select = True
-        bpy.context.scene.objects.active = ob
+        ob.select_set(True)
+        bpy.context.view_layer.objects.active = ob
 
         bpy.ops.object.editmode_toggle()
         bpy.ops.mesh.remove_doubles(threshold=0.0001, use_unselected=False)
@@ -747,7 +747,6 @@ def scenewideSurface():
         print("An error occured after importing the WRL Shape_IndexedFaceSet in surface")
         print(str(Exception))
     panel.ClearLigth(0)
-
 
 
 if __name__ == "__main__":

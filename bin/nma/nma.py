@@ -1,3 +1,4 @@
+#from prody import parsePDB, ANM, extendModel, traverseMode, writePDBStream
 from prody import *
 import sys
 import getopt

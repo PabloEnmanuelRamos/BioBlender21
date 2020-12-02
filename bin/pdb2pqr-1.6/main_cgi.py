@@ -113,6 +113,7 @@ def mainCGI():
 
     cgitb.enable()
     form = cgi.FieldStorage()
+
     ff = form["FF"].value
     input = 0
 
@@ -440,8 +441,8 @@ def mainCGI():
                     size = Pz.Psize()
                     size.parseInput(pqrpath)
                     size.runPsize(pqrpath)
-                    async = 0  # No async files here!
-                    myinput = Inp.Input(pqrpath, size, method, async)
+                    asynct = 0  # No async files here!
+                    myinput = Inp.Input(pqrpath, size, method, asynct)
                     myinput.printInputFiles()
                     myinput.dumpPickle()
 

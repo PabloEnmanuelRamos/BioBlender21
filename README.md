@@ -1,5 +1,3 @@
-# BioBlender2.1
-Blender plugin to process biological data and molecular work.
 BioBlender is an addon for Blender, aimed at providing tools for the import and elaboration of biological molecules.
 It consists of several functions, some executed by Blender and/or its Game Engine, and some others performed by external programs, such as PyMOL, APBS etc.
 
@@ -7,7 +5,7 @@ It was developed by the Scientific Visualization Unit of the Institute of Clinic
 
 We have now made it an Open Project, with the intent of keeping it updated, as long as Blender keeps moving on, and of possibly introducing new, better and useful features.
 
-More info can be found on the SciVis website (www.scivis.it) and on BioBlender.eu, where is also present the [Forum](http://www.scivis.it/community/)
+More info can be found on the SciVis website (www.scivis.it) and on BioBlender.eu
 
 BioBlender was developed to work on Windows, Mac and Linux. Therefore each fix will need to be tested on each of these platforms.
 Also, as BioBlender is supposed to handle different types of molecules, we will test:
@@ -25,9 +23,9 @@ The SciVis Team is grateful to all that will contribute to this project.
 **BioBlender is still under development**
 
 ## Prerequisites ##
-- [Blender 2.79b](http://www.blender.org/)
+- [Blender 2.79](http://www.blender.org/)
 - [Python 3.5.3](https://www.python.org/downloads/)
-- [PyMol 1.3](http://sourceforge.net/projects/pymol/?source=directory)
+- [PyMol](http://sourceforge.net/projects/pymol/?source=directory)
 
 ##Using the command line##
 This set up will allow you to update dynamically to the latest snapshot of BioBlender. You need to be able to use the command line and have git properly set up.
@@ -35,7 +33,7 @@ This set up will allow you to update dynamically to the latest snapshot of BioBl
 1. Get the latest version
    ```bash
    mkdir ~/BioBlender
-   git clone https://github.com/PabloEnmanuelRamos/BioBlender21.git ~/BioBlender
+   git clone https://github.com/MonZop/BioBlender.git ~/BioBlender
    ln -s ~/BioBlender ~/.config/blender/%BLENDER_VERSION_NUM%/scripts/addons/BioBlender
    ```
 
@@ -47,7 +45,7 @@ This set up will allow you to update dynamically to the latest snapshot of BioBl
 
 3. Launch Blender and do File-->User Preferences-->Addons
 
-4. Search the list for BioBlender2.1 and make sure it is ticked
+4. Search the list for BioBlender2.0 and make sure it is ticked
 
 5. Save user settings and restart blender
 
@@ -63,8 +61,8 @@ This set up will allow you to update dynamically to the latest snapshot of BioBl
 
     ```dos
     mkdir C:\some\directory\BioBlender
-    git clone http://github.com/PabloEnmanuelRamos/BioBlender21.git C:\some\directory\BioBlender
-    mklink /d "C:\Users\%username%\AppData\Roaming\Blender Foundation\Blender\%BLENDER_VERSION_NUM%\scripts\addons\BioBlender" C:\some\directory\BioBlender
+    git clone https://github.com/MonZop/BioBlender.git C:\some\directory\BioBlender
+    mklnk /d "C:\Users\%username%\AppData\Roaming\Blender Foundation\Blender\%BLENDER_VERSION_NUM%\scripts\addons\BioBlender" C:\some\directory\BioBlender
     ```
     The ```mklink``` step will work with ```/d``` or ```/j```, both ```/d``` and ```/j``` are good options, of the two /j requires no elevated user privileges so if ```/d``` fails, then use ```/j```
 
@@ -76,7 +74,7 @@ This set up will allow you to update dynamically to the latest snapshot of BioBl
    ```
 3. Launch Blender and do File-->User Preferences-->Addons
 
-4. Search the list for BioBlender2.1 and make sure it is ticked
+4. Search the list for BioBlender2.0 and make sure it is ticked
 
 5. Save user settings and restart blender
 
@@ -85,4 +83,3 @@ This set up will allow you to update dynamically to the latest snapshot of BioBl
    cd C:\some\directory\BioBlender
    git pull --all
    ```
-

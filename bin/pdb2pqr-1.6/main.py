@@ -667,8 +667,8 @@ def mainCommand(argv):
         size = Pz.Psize()
         size.parseInput(outpath)
         size.runPsize(outpath)
-        async = 0  # No async files here!
-        input = Inp.Input(outpath, size, method, async)
+        asynct = 0  # No async files here!
+        input = Inp.Input(outpath, size, method, asynct)
         input.printInputFiles()
         input.dumpPickle()
 
