@@ -107,7 +107,7 @@ class Elec:
         self.label = ""
         self.nlev = 4
         self.ofrac = 0.1
-        self.async = 0
+        self.asynct = 0
         self.asyncflag = asyncflag
         self.cgcent = "mol 1"
         self.fgcent = "mol 1"
@@ -157,7 +157,7 @@ class Elec:
             text += "    cgcent %s\n" % self.cgcent
             text += "    fgcent %s\n" % self.fgcent
             if self.asyncflag == 1:
-                text += "    async %i\n" % self.async
+                text += "    async %i\n" % self.asynct
         text += "    mol %i\n" % self.mol
         if self.lpbe:
             text += "    lpbe\n"
@@ -275,7 +275,7 @@ class Input:
                 outname = self.pqrpath[0:period] + "-PE%i.in" % i
                 for elec in self.elecs:
                     elec.asyncflag = 1
-                    elec.async = i
+                    elec.asynct = i
                 file = open(outname, "w")
                 file.write(str(self))
                 file.close()
@@ -404,7 +404,7 @@ def main():
 
     method = ""
     size = Pz.Psize()
-    async = 0
+    asynct = 0
     split = 0
     istrng = 0
     potdx = 0
@@ -424,7 +424,7 @@ def main():
             elif a == "async":
                 sys.stdout.write("Forcing an asynchronous calculation\n")
                 method = "mg-para"
-                async = 1
+                asynct = 1
             elif a == "manual":
                 sys.stdout.write("Forcing a manual calculation\n")
                 method = "mg-manual"
@@ -450,7 +450,7 @@ def main():
         splitInput(filename)
     else:
         size.runPsize(filename)
-        input = Input(filename, size, method, async, istrng, potdx)
+        input = Input(filename, size, method, asynct, istrng, potdx)
         input.printInputFiles()
 
 
