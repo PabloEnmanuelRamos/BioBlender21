@@ -1,5 +1,5 @@
+# -*- coding: utf-8 -*-
 # Blender modules
-# 2020-03-28
 import bpy
 from bpy import *
 import bpy.path
@@ -28,63 +28,27 @@ import copy
 from .BioBlender2 import *
 from . import BB2_GUI_PDB_IMPORT as ImpPDB
 from .BB2_PANEL_VIEW import *
-from .BB2_PHYSICS_SIM_PANEL import *
 from .BB2_MLP_PANEL import *
-from .BB2_OUTPUT_PANEL import *
-from .BB2_NMA_PANEL import *
 from .BB2_EP_PANEL import *
 
 
-class BB2_PDB_OUTPUT_PANEL(types.Panel):
-    bl_label = "BioBlender2 PDB Output"
-    bl_idname = "BB2_PDB_OUTPUT_PANEL"
-    bl_space_type = "PROPERTIES"
-    bl_region_type = "WINDOW"
-    bl_context = "scene"
-    bl_options = {'DEFAULT_CLOSED'}
-    bpy.types.Scene.BBPDBExportStep = bpy.props.IntProperty(attr="BBPDBExportStep", name="PDB Export Step",
-                                                            description="PDB Export step", default=1, min=1, max=100,
-                                                            soft_min=1, soft_max=50)
-
-    def draw(self, context):
-        scene = bpy.context.scene
-        layout = self.layout
-        r = layout.row()
-        r.prop(bpy.context.scene.render, "filepath", text="")
-        r = layout.row()
-        r.prop(bpy.context.scene, "frame_start")
-        r = layout.row()
-        r.prop(bpy.context.scene, "frame_end")
-        r = layout.row()
-        r.prop(bpy.context.scene, "BBPDBExportStep")
-        r = layout.row()
-        r.operator("ops.bb2_operator_export_pdb")
-        r = layout.row()
-        num = ((bpy.context.scene.frame_end - bpy.context.scene.frame_start) / bpy.context.scene.BBPDBExportStep) + 1
-        r.label("A total of %d frames will be exported." % num)
-
-
-class bb2_operator_export_pdb(types.Operator):
+class bb2_OT_operator_export_pdb(bpy.types.Operator):
     bl_idname = "ops.bb2_operator_export_pdb"
     bl_label = "Export PDB"
     bl_description = "Export current view to PDB"
 
     def invoke(self, context, event):
         try:
-            if (bpy.context.scene.objects.active.bb2_objectType == "ATOM") or (
-                    bpy.context.scene.objects.active.bb2_objectType == "PDBEMPTY"):
-                bpy.context.user_preferences.edit.use_global_undo = False
+            if (bpy.context.view_layer.objects.active.bb2_objectType == "ATOM") or (bpy.context.view_layer.objects.active.bb2_objectType == "PDBEMPTY"):
+                context.preferences.edit.use_global_undo = False
                 selectedPDBidS = []
-                for b in bpy.context.scene.objects:
-                    if b.select:
-                        try:
-                            if (b.bb2_pdbID not in selectedPDBidS) and (
-                                    (b.bb2_objectType == "ATOM") or (b.bb2_objectType == "PDBEMPTY")):
-                                t = copy.copy(b.bb2_pdbID)
-                                selectedPDBidS.append(t)
-                        except Exception as E:
-                            str1 = str(E)  # Do not print...
-                context.user_preferences.edit.use_global_undo = False
+                try:
+                    if (bpy.context.view_layer.objects.active.bb2_pdbID not in selectedPDBidS) and ((bpy.context.view_layer.objects.active.bb2_objectType == "ATOM") or (bpy.context.view_layer.objects.active.bb2_objectType == "PDBEMPTY")):
+                        t = copy.copy(bpy.context.view_layer.objects.active.bb2_pdbID)
+                        selectedPDBidS.append(t)
+                except Exception as E:
+                    print("Export PDB " + str(E))
+                context.preferences.edit.use_global_undo = False
                 for id in selectedPDBidS:
                     tID = copy.copy(id)
                     for o in bpy.data.objects:
@@ -94,7 +58,7 @@ class bb2_operator_export_pdb(types.Operator):
                                 exportPDBSequence(tmpName, tID)
                         except Exception as E:
                             print("PDB seq error: " + str(E))
-                bpy.context.user_preferences.edit.use_global_undo = True
+                context.preferences.edit.use_global_undo = True
             else:
                 print("No PDB Empty or Atom selected")
         except Exception as E:
@@ -105,11 +69,10 @@ class bb2_operator_export_pdb(types.Operator):
             return {'FINISHED'}
 
 
-bpy.utils.register_class(bb2_operator_export_pdb)
+bpy.utils.register_class(bb2_OT_operator_export_pdb)
 
 
 def trueSphereOrigin(object):
-    tmpSphere = bpy.data.objects[object.name]
     coord = [(object.matrix_world[0])[3], (object.matrix_world[1])[3], (object.matrix_world[2])[3]]
     return coord
 
@@ -118,7 +81,7 @@ def exportPDBSequence(curPDBpath="", tID=0):
     step = bpy.context.scene.BBPDBExportStep
     start = bpy.context.scene.frame_start
     end = bpy.context.scene.frame_end
-    bpy.context.scene.render.engine = 'BLENDER_RENDER'
+    bpy.context.scene.render.engine = 'BLENDER_EEVEE'
 
     a = time.time()
 
@@ -167,7 +130,6 @@ def exportPDBSequence(curPDBpath="", tID=0):
     bpy.context.scene.frame_start = start
     bpy.context.scene.frame_end = end
     print(time.time() - a)
-
 
 
 if __name__ == "__main__":
