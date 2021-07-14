@@ -1,4 +1,4 @@
-# BioBlender2 v1.0
+# BioBlender2 available for Blender 2.93 
 BioBlender is an addon for Blender, aimed at providing tools for the import and elaboration of biological molecules.
 It consists of several functions, some executed by Blender and/or its Game Engine, and some others performed by external programs, such as PyMOL, APBS etc.
 
