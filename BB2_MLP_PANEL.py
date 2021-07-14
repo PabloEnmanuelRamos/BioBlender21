@@ -1,5 +1,6 @@
+# coding= ascii
 # Blender modules
-# 2020-03-28
+
 import bpy
 from bpy import *
 import bpy.path
@@ -28,59 +29,12 @@ import copy
 from .BioBlender2 import *
 from . import BB2_GUI_PDB_IMPORT as ImportPDB
 from . import BB2_PANEL_VIEW as panel
-from .BB2_PHYSICS_SIM_PANEL import *
-from .BB2_PDB_OUTPUT_PANEL import *
-from .BB2_OUTPUT_PANEL import *
-from .BB2_NMA_PANEL import *
-from .BB2_EP_PANEL import *
 
-class BB2_MLP_PANEL(types.Panel):
-    bl_label = "BioBlender2 MLP Visualization"
-    bl_idname = "BB2_MLP_PANEL"
-    bl_space_type = "PROPERTIES"
-    bl_region_type = "WINDOW"
-    bl_context = "scene"
-    bl_options = {'DEFAULT_CLOSED'}
-    bpy.types.Scene.BBAtomic = bpy.props.EnumProperty(attr="BBAtomic", name="BBAtomic",
-                                                      description="Atomic or Surface MLP",
-                                                      items=(("0", "Atomic", ""), ("1", "Surface", "")), default="0")
-    bpy.types.Scene.BBMLPFormula = bpy.props.EnumProperty(attr="BBMLPFormula", name="Formula",
-                                                          description="Select a formula for MLP calculation", items=(
-            ("0", "Dubost", ""), ("1", "Testa", ""), ("2", "Fauchere", ""), ("3", "Brasseur", ""),
-            ("4", "Buckingham", "")),
-                                                          default="1")
-    bpy.types.Scene.BBMLPGridSpacing = bpy.props.FloatProperty(attr="BBMLPGridSpacing", name="Grid Spacing",
-                                                               description="MLP Calculation step size (Smaller is better, but slower)",
-                                                               default=1, min=0.01, max=20, soft_min=1.4, soft_max=10)
-    bpy.types.Scene.BBAtomicMLP = bpy.props.BoolProperty(attr="BBAtomicMLP", name="Atomic MLP", default=False)
-
-    def draw(self, context):
-        scene = context.scene
-        layout = self.layout
-        r = layout.row()
-        r.prop(scene, "BBAtomic", expand=True)
-        r = layout.row()
-        if bpy.context.scene.BBAtomic == "0":
-            r.label("Calculate Atomic MLP")
-            r = layout.row()
-            r.scale_y = 2
-            r.operator("ops.bb2_operator_atomic_mlp")
-        else:
-            split = layout.split()
-            c = split.column()
-            c.prop(scene, "BBMLPFormula")
-            c.prop(scene, "BBMLPGridSpacing")
-            r = split.row()
-            r.scale_y = 2
-            r.operator("ops.bb2_operator_mlp")
-            split = layout.split()
-            r = split.column(align=True)
-            r = split.column()
-            r.scale_y = 2
-            r.operator("ops.bb2_operator_mlp_render")
+global namemlp
+namemlp = ""
 
 
-class bb2_operator_atomic_mlp(types.Operator):
+class bb2_OT_operator_atomic_mlp(bpy.types.Operator):
     bl_idname = "ops.bb2_operator_atomic_mlp"
     bl_label = "Atomic MLP"
     bl_description = "Atomic MLP"
@@ -88,30 +42,27 @@ class bb2_operator_atomic_mlp(types.Operator):
     def invoke(self, context, event):
         try:
             selectedPDBidS = []
-            for b in bpy.context.scene.objects:
-                if b.select:
-                    try:
-                        if b.bb2_pdbID not in selectedPDBidS:
-                            t = copy.copy(b.bb2_pdbID)
-                            selectedPDBidS.append(t)
-                    except Exception as E:
-                        str1 = str(E)  # Do not print...
-                        print("AtomicMLP ERROR 1" + str1)
-            context.user_preferences.edit.use_global_undo = False
+            try:
+                if bpy.context.view_layer.objects.active.bb2_pdbID not in selectedPDBidS:
+                    t = copy.copy(bpy.context.view_layer.objects.active.bb2_pdbID)
+                    selectedPDBidS.append(t)
+            except Exception as E:
+                str1 = str(E)  # Do not print...
+                print("AtomicMLP ERROR 1" + str1)
+            context.preferences.edit.use_global_undo = False
             for id in selectedPDBidS:
                 bpy.ops.object.select_all(action="DESELECT")
                 for o in bpy.data.objects:
-                    o.select = False
+                    o.select_set(False)
                 for obj in bpy.context.scene.objects:
                     try:
                         if obj.bb2_pdbID == id:
-                            obj.select = True
+                            obj.select_set(True)
                     except Exception as E:
-                        str2 = str(E)  # Do not print...
-                        print("AtomicMLP ERROR 2" + str2)
+                        print("AtomicMLP ERROR 2" + str(E))
                 tID = copy.copy(id)
                 atomicMLP(tID)
-            context.user_preferences.edit.use_global_undo = True
+            context.preferences.edit.use_global_undo = True
         except Exception as E:
             s = "Generate Atomic MLP visualization Failed: " + str(E)
             print(s)
@@ -120,7 +71,7 @@ class bb2_operator_atomic_mlp(types.Operator):
             return {'FINISHED'}
 
 
-bpy.utils.register_class(bb2_operator_atomic_mlp)
+bpy.utils.register_class(bb2_OT_operator_atomic_mlp)
 
 
 def atomicMLP(tID):
@@ -137,86 +88,82 @@ def atomicMLP(tID):
     print("Atomic MLP Color set")
 
 
-class bb2_operator_mlp(types.Operator):
+class bb2_OT_operator_mlp(bpy.types.Operator):
     bl_idname = "ops.bb2_operator_mlp"
     bl_label = "Show MLP on Surface"
     bl_description = "Calculate Molecular Lipophilicity Potential on surface"
 
     def invoke(self, context, event):
         try:
-            bpy.context.user_preferences.edit.use_global_undo = False
+            context.preferences.edit.use_global_undo = False
             selectedPDBidS = []
-            for b in bpy.context.scene.objects:
-                if b.select == True:
-                    try:
-                        if b.bb2_pdbID not in selectedPDBidS:
-                            t = copy.copy(b.bb2_pdbID)
-                            selectedPDBidS.append(t)
-                    except Exception as E:
-                        str1 = str(E)
-                        print("Error operator_mlp 1" + str(E))
-            context.user_preferences.edit.use_global_undo = False
+            try:
+                if bpy.context.view_layer.objects.active.bb2_pdbID not in selectedPDBidS:
+                    t = copy.copy(bpy.context.view_layer.objects.active.bb2_pdbID)
+                    selectedPDBidS.append(t)
+            except Exception as E:
+                str1 = str(E)  # Do not print...
+                print("MLP on Surface ERROR 1" + str1)
+            context.preferences.edit.use_global_undo = False
             for id in selectedPDBidS:
                 bpy.ops.object.select_all(action="DESELECT")
                 for o in bpy.data.objects:
-                    o.select = False
+                    o.select_set(False)
                 for obj in bpy.context.scene.objects:
                     try:
                         if obj.bb2_pdbID == id:
-                            obj.select = True
+                            obj.select_set(True)
                     except Exception as E:
-                        str2 = str(E)
                         print("Error operator_mlp 2" + str(E))
                 tID = copy.copy(id)
                 mlp(tID, force=True)
                 panel.todoAndviewpoints()
             bpy.context.scene.BBViewFilter = "4"
-            bpy.context.user_preferences.edit.use_global_undo = True
+            context.preferences.edit.use_global_undo = True
         except Exception as E:
-            s = "Generate MLP visualization Failed 1: " + str(E)
+            s = "Generate MLP visualization Failed.. MLP_PANEL 1: " + str(E)
             print(s)
             return {'CANCELLED'}
         else:
             return {'FINISHED'}
 
 
-bpy.utils.register_class(bb2_operator_mlp)
+bpy.utils.register_class(bb2_OT_operator_mlp)
 
 
-class bb2_operator_mlp_render(types.Operator):
+class bb2_OT_operator_mlp_render(bpy.types.Operator):
     bl_idname = "ops.bb2_operator_mlp_render"
     bl_label = "Render MLP to Surface"
     bl_description = "Visualize Molecular Lipophilicity Potential on surface"
 
     def invoke(self, context, event):
         try:
-            context.user_preferences.edit.use_global_undo = False
+            context.preferences.edit.use_global_undo = False
             selectedPDBidS = []
             for b in bpy.context.scene.objects:
-                if b.select:
+                if b.select_get():
                     try:
                         if (b.bb2_pdbID not in selectedPDBidS) and (b.bb2_objectType == "SURFACE"):
                             t = copy.copy(b.bb2_pdbID)
                             selectedPDBidS.append(t)
                     except Exception as E:
                         str1 = str(E)  # Do not print...
-            context.user_preferences.edit.use_global_undo = False
+            context.preferences.edit.use_global_undo = False
             for id in selectedPDBidS:
                 tID = copy.copy(id)
                 mlpRender(tID)
                 panel.todoAndviewpoints()
             context.scene.BBViewFilter = "4"
-            bpy.context.scene.world.light_settings.use_environment_light = False
-            context.user_preferences.edit.use_global_undo = True
+            context.preferences.edit.use_global_undo = True
         except Exception as E:
-            s = "Generate MLP visualization Failed 2: " + str(E)
+            s = "Generate MLP visualization Failed.. MLP_PANEL 2: " + str(E)
             print(s)
             return {'CANCELLED'}
         else:
             return {'FINISHED'}
 
 
-bpy.utils.register_class(bb2_operator_mlp_render)
+bpy.utils.register_class(bb2_OT_operator_mlp_render)
 
 
 # do MLP visualization
@@ -227,14 +174,12 @@ def mlp(tID, force):
     global dimension
     global origin
     global delta
-
     scene = bpy.context.scene
     formula = bpy.context.scene.BBMLPFormula
     spacing = bpy.context.scene.BBMLPGridSpacing
     namemlp = "MLP_Surface_" + NamePDBMLP(tID) + "_" + getNumFrameMLP()
     if ExistMLP(namemlp) == False:
-        scene.render.engine = 'BLENDER_RENDER'
-
+        scene.render.engine = 'CYCLES'
         def getVar(rawID):
             try:
                 val = dxCache[rawID]
@@ -253,7 +198,7 @@ def mlp(tID, force):
                 pmm = dxData[cellz + ((celly) * dimz) + ((cellx + 1) * dimz * dimy)]
                 mpm = dxData[cellz + ((celly + 1) * dimz) + ((cellx) * dimz * dimy)]
                 mmp = dxData[cellz + 1 + ((celly) * dimz) + ((cellx) * dimz * dimy)]
-                ppm = dxData[cellz + ((celly + 1) * dimz) + ((cellx +1) * dimz * dimy)]
+                ppm = dxData[cellz + ((celly + 1) * dimz) + ((cellx + 1) * dimz * dimy)]
                 mpp = dxData[cellz + 1 + ((celly + 1) * dimz) + ((cellx) * dimz * dimy)]
                 pmp = dxData[cellz + 1 + ((celly) * dimz) + ((cellx + 1) * dimz * dimy)]
                 ppp = dxData[cellz + 1 + ((celly + 1) * dimz) + ((cellx + 1) * dimz * dimy)]
@@ -306,11 +251,25 @@ def mlp(tID, force):
                 panel.launch(exeName=command)
             print("Running PyMLP")
             global pyPath
+            if os.sys.platform == "linux":
+                pyPath ="python"
+                if os.path.exists("/usr/bin/python3"):
+                    pyPath = "python3"
+                elif os.path.exists("/usr/bin/python"):
+                    pyPath = "python"
+                elif os.path.exists("/usr/bin/python2"):
+                    pyPath = "python2"
             if not pyPath:
                 pyPath = "python"
-            command = "%s %s -i %s -m %s -s %f -o %s -v" % (panel.quotedPath(pyPath), panel.quotedPath(homePath + "bin" + os.sep + "pyMLP-1.0" + os.sep + "pyMLP.py"), panel.quotedPath(homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "tmp.pdb"), method, spacing, panel.quotedPath(homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "tmp.dx"))
+            command = "%s %s -i %s -m %s -s %f -o %s -v" % (
+                panel.quotedPath(pyPath),
+                panel.quotedPath(homePath + "bin" + os.sep + "pyMLP-1.0" + os.sep + "pyMLP.py"),
+                panel.quotedPath(homePath + "tmp" + os.sep + NamePDBMLP(
+            tID) + os.sep + "tmp.pdb"), method, spacing,
+                panel.quotedPath(homePath + "tmp" + os.sep + NamePDBMLP(
+            tID) + os.sep + "tmp.dx"))
 
-            p = panel.launch(exeName=command, async=True)
+            p = panel.launch(exeName=command, asynct=True)
 
             print("PyMLP command succeded")
             panel.surface(sPid=tID, optName=namemlp)
@@ -327,7 +286,8 @@ def mlp(tID, force):
             print("Loading MLP values into Blender")
 
             try:
-                tmpPathO = homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "tmp.dx"
+                tmpPathO = homePath + "tmp" + os.sep + NamePDBMLP(
+            tID) + os.sep + "tmp.dx"
                 with open(tmpPathO) as dx:
                     for line in dx:
                         # skip comments starting with #
@@ -353,12 +313,10 @@ def mlp(tID, force):
                             line = dx.readline()
                             z = float(line.split()[-3:][2])
                             delta = [x, y, z]
-
                             # ignore more garbage lines
                             dx.readline()
                             dx.readline()
                             continue
-
                         # load as much data as we should, ignoring the rest of the file
                         if (len(dxData) >= size):
                             break
@@ -369,12 +327,11 @@ def mlp(tID, force):
             except Exception as E:
                 print("An error occured in MLP while loading values into Blender; be careful; " + str(E))
 
-            # quick and dirty update starts here
+        # quick and dirty update starts here
         if dxData:
             ob = bpy.data.objects[namemlp]
-            ob.bb2_pdbID = copy.copy(tID)
-            ob.select = True
-            bpy.context.scene.objects.active = ob
+            ob.select_set(True)
+            bpy.context.view_layer.objects.active = ob
 
             if not bpy.context.vertex_paint_object:
                 bpy.ops.paint.vertex_paint_toggle()
@@ -387,22 +344,22 @@ def mlp(tID, force):
                 print("Error in MLP: remove doubles and shade smooth failed; " + str(E))
 
             try:
-                ob.data.update(calc_tessface=True)
+                ob.data.update()
             except Exception as E:
                 print("Error in MLP: ob.data.update tessface failed; " + str(E))
-
 
             try:
                 vColor0 = []
                 vColor1 = []
                 vColor2 = []
-                for f in ob.data.tessfaces:
-                    vColor0.extend(getVar(f.vertices_raw[0]))
-                    vColor1.extend(getVar(f.vertices_raw[1]))
-                    vColor2.extend(getVar(f.vertices_raw[2]))
+                ob.data.calc_loop_triangles()
+                for f in ob.data.loop_triangles:
+                    vColor0.extend(getVar(f.vertices[0]))
+                    vColor1.extend(getVar(f.vertices[1]))
+                    vColor2.extend(getVar(f.vertices[2]))
                 for i in range(len(ob.data.vertex_colors[0].data)):
-                    tmp = ((0.21 * vColor0[i]) + (0.71 * vColor1[i]) + (0.07 * vColor2[i]))
-                    ob.data.vertex_colors[0].data[i].color = (tmp, tmp, tmp)
+                    tmp = ((0.91 * vColor0[i]) + (0.98 * vColor1[i]) + (0.98 * vColor2[i])) /3
+                    ob.data.vertex_colors[0].data[i].color = (tmp, tmp, tmp, tmp)
             except Exception as E:
                 print("Error in MLP: tessfaces vColor extend failed; " + str(E))
 
@@ -425,51 +382,42 @@ def mlp(tID, force):
             except Exception as E:
                 print("Error in MLP: VBO ob.data.update failed; " + str(E))
 
-            try:
-                for area in bpy.context.screen.areas:
-                    if area.type == 'VIEW_3D':
-                        area.spaces[0].viewport_shade = "TEXTURED"
-            except Exception as E:
-                print("Error in MLP: view3D viewport shade textured failed; " + str(E))
-
         try:
             for obj in bpy.context.scene.objects:
                 if obj.BBInfo:
-                    obj.hide = True
+                    #obj.hide_viewport = True
                     obj.hide_render = True
         except Exception as E:
             print("Error in MLP: obj.BBInfo")
         panel.ClearLigth(1)
         DeleteSurface()
+        bpy.context.view_layer.objects.active = ob
         print("MLP function completed")
+
     else:
         bpy.ops.object.select_all(action="DESELECT")
         for o in bpy.data.objects:
-            o.select = False
+            o.select_set(False)
 
 
 def mlpRender(tID):
     print("MLP RENDER Start")
     scene = bpy.context.scene
     # Stop if no surface is found
-
-    scene.render.engine = 'BLENDER_RENDER'
-
+    scene.render.engine = 'CYCLES'
     for obj in bpy.data.objects:
         try:
             if (obj.bb2_pdbID == tID) and (obj.bb2_objectType == "SURFACE") and (obj.name.split("_")[0] != "SURFACE"):
                 surfaceName = str(copy.copy(obj.name))
-
         except Exception as E:
             print("mlpRender(tID)" + str(E))
     ob = bpy.data.objects[surfaceName]
 
-    bpy.ops.object.select_all(action="DESELECT")
     for o in bpy.data.objects:
-        o.select = False
-    bpy.context.scene.objects.active = None
-    bpy.data.objects[surfaceName].select = True
-    bpy.context.scene.objects.active = bpy.data.objects[surfaceName]
+        o.select_set(False)
+    bpy.context.view_layer.objects.active = None
+    bpy.data.objects[surfaceName].select_set(True)
+    bpy.context.view_layer.objects.active = bpy.data.objects[surfaceName]
 
     if not ob:
         raise Exception("No MLP Surface Found, select surface view first")
@@ -478,67 +426,65 @@ def mlpRender(tID):
     if not dxData:
         raise Exception("No MLP data is loaded.  Run MLP calculation first")
 
-    # create image data block
-    try:
-        print("MLP Render first time: False")
-        firstTime = False
-        image = bpy.data.images["MLPBaked_" + NamePDBMLP(tID)]
-    except:
-        print("MLP Render first time: True")
-        firstTime = True
-        image = bpy.data.images.new(name="MLPBaked_" + NamePDBMLP(tID), width=2048, height=2048)
+    # Vertex Color
+    Directory = homePath + "data" + os.sep + "Vetex.blend" + os.sep + "Material" + os.sep
+    Path = os.sep + os.sep + "data" + os.sep + "Vetex.blend" + os.sep + "Material" + os.sep + "matVetex"
+    objName = "matVetex"
 
-    # set material
-    if firstTime:
-        mat = bpy.data.materials.new("matMLP" + NamePDBMLP(tID))
-        mat.use_shadeless = True
-        mat.use_vertex_color_paint = True
-        ob.data.materials.append(mat)
-    else:
-        mat = bpy.data.materials["matMLP" + NamePDBMLP(tID)]
-        mat.use_shadeless = True
-        mat.use_vertex_color_paint = True
-        if not ob.data.materials:
-            ob.data.materials.append(mat)
+    append_file_to_current_blend(Path, objName, Directory)
+    bpy.data.materials["matVetex"].name = "matMLP" + NamePDBMLP(tID) + "_" + getNumFrameMLP()
+    mat = bpy.data.materials["matMLP" + NamePDBMLP(tID) + "_" + getNumFrameMLP()]
+    ob.data.materials.append(mat)
 
-    print("Baking MLP textures")
-    # save and bake
+    bpy.data.images["MLPBaked"].name = "MLPBaked" + NamePDBMLP(tID)
+    image = bpy.data.images["MLPBaked" + NamePDBMLP(tID)]
     image.source = "GENERATED"
     image.generated_height = 2048
     image.generated_width = 2048
 
-    if not ob.data.uv_textures:
-        bpy.context.active_object.data.uv_textures.new()
     if bpy.context.mode != "EDIT":
         bpy.ops.object.editmode_toggle()
-    # ====
-    for uv in ob.data.uv_textures[0].data:
+        # ====
+    for uv in ob.data.uv_layers[0].data:
         uv.image = image
 
-    bpy.data.screens['UV Editing'].areas[1].spaces[0].image = bpy.data.images['MLPBaked_' + NamePDBMLP(tID)]
+    bpy.ops.uv.smart_project(angle_limit=66, island_margin=0, area_weight=0)
 
-    bpy.ops.uv.smart_project(angle_limit=66, island_margin=0, user_area_weight=0)
-    bpy.context.scene.render.bake_type = 'TEXTURE'
-
-    bpy.context.scene.render.use_raytrace = False
+    for o in bpy.data.objects:
+        o.select_set(False)
+    bpy.context.view_layer.objects.active = None
+    bpy.context.view_layer.objects.active = bpy.data.objects[surfaceName]
+    bpy.data.objects[surfaceName].select_set(True)
+    bpy.ops.uv.smart_project(angle_limit=66, island_margin=0, area_weight=0)
+    bpy.ops.uv.smart_project()
+    bpy.context.space_data.context = 'RENDER'
+    bpy.context.scene.cycles.bake_type = 'DIFFUSE'
+    bpy.context.scene.render.bake.use_pass_direct = False
+    bpy.context.scene.render.bake.use_pass_indirect = False
+    bpy.context.scene.render.bake.margin = 16
+    bpy.context.scene.render.bake.target = 'IMAGE_TEXTURES'
     print("===== BAKING... =====")
-    bpy.ops.object.bake_image()
+    bpy.ops.object.bake(type="DIFFUSE", filepath="", target='IMAGE_TEXTURES')
     print("=====          ... BAKED! =====")
-    bpy.context.scene.render.use_raytrace = True
 
     if opSystem == "linux":
-        os.chdir(panel.quotedPath(homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep))
+        os.chdir(panel.quotedPath(homePath + "tmp" + os.sep + NamePDBMLP(
+            tID) + os.sep))
     elif opSystem == "darwin":
-        os.chdir(panel.quotedPath(homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep))
+        os.chdir(panel.quotedPath(homePath + "tmp" + os.sep + NamePDBMLP(
+            tID) + os.sep))
     else:
-        os.chdir(r"\\?\\" + homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep)
+        os.chdir(r"\\?\\" + homePath + "tmp" + os.sep + NamePDBMLP(
+            tID) + os.sep)
 
     print("Image Save Render")
-    image.save_render(homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "MLPBaked.png")
+    image.save_render(homePath + "tmp" + os.sep + NamePDBMLP(
+        tID) + os.sep + "MLPBaked.png")
     # copy the needed files
     print("Copy the needed files")
     uriSource = homePath + "data" + os.sep + "noise.png"
-    uriDest = homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "noise.png"
+    uriDest = homePath + "tmp" + os.sep + NamePDBMLP(
+        tID) + os.sep + "noise.png"
 
     if opSystem == "linux":
         shutil.copy(uriSource, uriDest)
@@ -548,7 +494,8 @@ def mlpRender(tID):
         shutil.copy(r"\\?\\" + uriSource, r"\\?\\" + uriDest)
 
     uriSource = homePath + "data" + os.sep + "composite.blend"
-    uriDest = homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "composite.blend"
+    uriDest = homePath + "tmp" + os.sep + NamePDBMLP(
+        tID) + os.sep + "composite.blend"
 
     if opSystem == "linux":
         shutil.copy(uriSource, uriDest)
@@ -557,84 +504,112 @@ def mlpRender(tID):
     else:
         shutil.copy(r"\\?\\" + uriSource, r"\\?\\" + uriDest)
 
-
     # render out composite texture
     if blenderPath == "":
         bP = panel.quotedPath(str(os.environ['PWD']) + os.sep + "blender")
-        command = "%s -b %s -f 1" % (panel.quotedPath(bP), panel.quotedPath(homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "composite.blend"))
+        command = "%s -b %s -f 1" % (panel.quotedPath(bP), panel.quotedPath(homePath + "tmp" + os.sep + NamePDBMLP(
+            tID) + os.sep + "composite.blend"))
     else:
-        print(str(panel.quotedPath(blenderPath)))
-        command = "%s -b %s -f 1" % (panel.quotedPath(blenderPath), panel.quotedPath(homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "composite.blend"))
-
+        command = "%s -b %s -f 1" % (panel.quotedPath(blenderPath), panel.quotedPath(homePath + "tmp" + os.sep + NamePDBMLP(
+            tID) + os.sep + "composite.blend"))
     panel.launch(exeName=command)
 
-    # set materials
-    mat.specular_shader = ("TOON")
-    mat.specular_toon_size = 0.2
-    mat.specular_toon_smooth = 0.0
-    mat.specular_intensity = 0.0
-    mat.use_shadeless = False
-    mat.use_vertex_color_paint = False
-    mat.use_shadows = False
+    print("Copy the needed files")
+    uriSource = homePath + "data" + os.sep + "MLPSurface.blend"
+    uriDest = homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "MLPSurface.blend"
 
-    # setup textures
-    if firstTime:
-        img_bump = bpy.data.images.load(homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "0001.png")
-        img_bump.name = "0001_" + NamePDBMLP(tID) + ".png"
-        tex_bump = bpy.data.textures.new('bump', type="IMAGE")
-        tex_bump.image = img_bump
-        mtex = mat.texture_slots.add()
-        mtex.texture = tex_bump
-        mtex.texture_coords = 'UV'
-        mtex.use_map_normal = True
-        mtex.use_map_color_diffuse = False
-        bpy.data.textures["bump"]
-        mat.texture_slots[0].normal_factor = 1
-        img_baked = bpy.data.images.load(homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "MLPBaked.png")
-        img_baked.name = "MLPBaked_" + NamePDBMLP(tID) + ".png"
-        tex_spec = bpy.data.textures.new('specular', type="IMAGE")
-        tex_spec.image = img_baked
-        tex_spec.contrast = 4.0
-        mtex = mat.texture_slots.add()
-        mtex.texture = tex_spec
-        mtex.texture_coords = 'UV'
-        mtex.use_map_color_diffuse = False
-        mtex.use_map_specular = True
-        mat.texture_slots[1].use_rgb_to_intensity = True
-        mat.texture_slots[1].default_value = 1
+    if opSystem == "linux":
+        shutil.copy(uriSource, uriDest)
+    elif opSystem == "darwin":
+        shutil.copy(uriSource, uriDest)
+    else:
+        shutil.copy(r"\\?\\" + uriSource, r"\\?\\" + uriDest)
 
-    # refresh all images
-    for img in bpy.data.images:
-        img.reload()
+    NameMaterial = "matMLP_" + NamePDBMLP(tID) + "_" + getNumFrameMLP()
 
-    for area in bpy.context.screen.areas:
-        if area.type == 'VIEW_3D':
-            area.spaces[0].viewport_shade = "SOLID"
-    bpy.ops.object.editmode_toggle()
+    if os.path.exists(homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "0001_" + NamePDBMLP(
+            tID) + "_" + getNumFrameMLP() + ".png"):
+        os.remove(homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "0001_" + NamePDBMLP(
+            tID) + "_" + getNumFrameMLP() + ".png")
 
-    ob.data.materials[0] = mat
+    os.rename(homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "0001.png",
+              homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "0001_" + NamePDBMLP(
+                  tID) + "_" + getNumFrameMLP() + ".png")
+    try:
+        mat = bpy.data.materials[NameMaterial]
+        img_bump = bpy.data.images["0001_" + NamePDBMLP(tID) + "_" + getNumFrameMLP() + ".png"]
+        bpy.data.images["MLPBaked" + NamePDBMLP(tID)].name = "MLPBaked_" + NamePDBMLP(tID) + "_" + getNumFrameMLP()
+        bpy.data.images.remove(img_bump)
+        ob.select_set(True)
+        bpy.context.view_layer.objects.active = ob
+        bpy.ops.image.open(filepath=homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "0001.png", use_sequence_detection=True, relative_path=True)
+        bpy.data.images["0001.png"].name = "0001_" + NamePDBMLP(tID) + "_" + getNumFrameMLP() + ".png"
+        bpy.data.materials["matMLP_" + NamePDBMLP(tID) + "_" + getNumFrameMLP()].node_tree.nodes["Imagen"].image = bpy.data.images["0001_" + NamePDBMLP(tID) + "_" + getNumFrameMLP() + ".png"]
+        bpy.data.materials["matMLP_" + NamePDBMLP(tID) + "_" + getNumFrameMLP()].node_tree.nodes["Image Texture"].image = bpy.data.images["MLPBaked_" + NamePDBMLP(tID) + "_" + getNumFrameMLP()]
+    except Exception as E:
+        bpy.context.view_layer.objects.active = None
+        bpy.ops.object.select_all(action="DESELECT")
+        for o in bpy.data.objects:
+            o.select_set(False)
 
-    ob.data.materials[0].specular_toon_smooth = 0.3
-    ob.data.materials[0].texture_slots[0].normal_factor = 1
-    ob.data.materials[0].texture_slots[1].default_value = 1
-    ob.data.materials[0].texture_slots[1].specular_factor = 0.1
+        Directory = homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "MLPSurface.blend" + os.sep + "Object" + os.sep
+        Path = os.sep + os.sep + "tmp" + os.sep + NamePDBMLP(
+            tID) + os.sep + "MLPSurface.blend" + os.sep + "Object" + os.sep + "DirectLight"
+        objName = "DirectLight"
 
-    bpy.ops.paint.vertex_paint_toggle()
-    meshData = ob.data
-    vColLayer0 = meshData.vertex_colors[0]
-    for vCol in vColLayer0.data:
-        vCol.color = Color((((vCol.color[0] - 0.5) * 0.6) + 0.5, ((vCol.color[1] - 0.5) * 0.6) + 0.5,
-                            ((vCol.color[2] - 0.5) * 0.6) + 0.5))
-    meshData.update()
-    bpy.ops.paint.vertex_paint_toggle()
+        append_file_to_current_blend(Path, objName, Directory)
 
-    ob.data.materials[0].use_vertex_color_paint = True
+        Directory = homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "MLPSurface.blend" + os.sep + "Material" + os.sep
+        Path = os.sep + os.sep + "tmp" + os.sep + NamePDBMLP(
+            tID) + os.sep + "MLPSurface.blend" + os.sep + "Material" + os.sep + "matMLP"
+        objName = "matMLP"
+
+        append_file_to_current_blend(Path, objName, Directory)
+
+        mat = bpy.data.materials["matMLP"]
+        mat.name = NameMaterial
+
+        Directory = homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "MLPSurface.blend" + os.sep + "Texture" + os.sep
+        Path = os.sep + os.sep + "tmp" + os.sep + NamePDBMLP(
+            tID) + os.sep + "MLPSurface.blend" + os.sep + "Texture" + os.sep + "Surface"
+        objName = "Surface"
+
+        append_file_to_current_blend(Path, objName, Directory)
+
+        bpy.data.textures["Surface"].name = "Surface_" + NamePDBMLP(tID) + "_" + getNumFrameMLP()
+
+        ob.select_set(True)
+        bpy.context.view_layer.objects.active = ob
+        bpy.ops.image.open(filepath=homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "0001_" + NamePDBMLP(
+            tID) + "_" + getNumFrameMLP() + ".png", use_sequence_detection=True, relative_path=True)
+
+        bpy.data.images["MLPBaked" + NamePDBMLP(tID)].name = "MLPBaked_" + NamePDBMLP(tID) + "_" + getNumFrameMLP()
+        try:
+            bpy.data.materials["matMLP_" + NamePDBMLP(tID) + "_" + getNumFrameMLP()].node_tree.nodes["Imagen"].image = bpy.data.images["0001_" + NamePDBMLP(tID) + "_" + getNumFrameMLP() + ".png"]
+            bpy.data.materials["matMLP_" + NamePDBMLP(tID) + "_" + getNumFrameMLP()].node_tree.nodes["Image Texture"].image = bpy.data.images["MLPBaked_" + NamePDBMLP(tID) + "_" + getNumFrameMLP()]
+        except Exception as E:
+            print("Error change name of the image" + str(E))
+    ob.select_set(True)
+    bpy.context.view_layer.objects.active = ob
+    try:
+        ob.data.materials.pop(index=-1)
+    except Exception as E:
+        print("There is no material " + str(E))
+    ob.data.materials.append(mat)
+    ob.data.materials.data.use_paint_mask_vertex = True
+
+    if bpy.context.mode != 'EDIT_MESH':
+        bpy.ops.object.editmode_toggle()
+        bpy.ops.uv.smart_project(angle_limit=66, island_margin=0, user_area_weight=0)
+        bpy.ops.object.editmode_toggle()
 
     for obj in bpy.context.scene.objects:
         if obj.BBInfo:
-            obj.hide = True
+            # obj.hide_viewport = True
             obj.hide_render = True
-    panel.ClearLigth(1)
+    scene.render.engine = 'BLENDER_EEVEE'
+    panel.ClearLigth(0)  # Before 1
+    CleanShape()
 
 
 # Wait until process finishes
@@ -645,9 +620,9 @@ def wait(process):
 
 def DeleteSurface():
     for surface in bpy.data.objects:
-        surface.select = False
+        surface.select_set(False)
         if surface.name.split("_")[0] == "SURFACE":
-            surface.select = True
+            surface.select_set(True)
     bpy.ops.object.delete()
 
 
@@ -685,5 +660,17 @@ def NamePDBMLP(tID):
     return PDB.split(".")[0]
 
 
+def CleanShape():
+    bpy.ops.object.select_all(action="DESELECT")
+    if ("Shape_Sphere" in bpy.data.objects.keys()) or ("Shape_Cylinder" in bpy.data.objects.keys()):
+        for obj in bpy.data.objects:
+            obj.select_set(False)
+            if obj.name[:12] == "Shape_Sphere":
+                obj.select_set(True)
+            if obj.name[:14] == "Shape_Cylinder":
+                obj.select_set(True)
+        bpy.ops.object.delete()
+
+
 if __name__ == "__main__":
-    print("MLP module created")
+    print("MLP")
