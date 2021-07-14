@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Blender modules
 # 2020-03-28
 import bpy
@@ -30,67 +31,9 @@ from . import BB2_PANEL_VIEW as panel
 from . import BB2_MLP_PANEL as MLP
 from .BB2_GUI_PDB_IMPORT import *
 from . import BB2_EP_PANEL as EP
-from .BB2_PANEL_VIEW import *
-from .BB2_PHYSICS_SIM_PANEL import *
-from .BB2_MLP_PANEL import *
-from .BB2_PDB_OUTPUT_PANEL import *
-from .BB2_NMA_PANEL import *
-from .BB2_EP_PANEL import *
 
 
-
-class BB2_OUTPUT_PANEL(types.Panel):
-    bl_label = "BioBlender2 Movie Output"
-    bl_idname = "BB2_OUTPUT_PANEL"
-    bl_space_type = "PROPERTIES"
-    bl_region_type = "WINDOW"
-    bl_context = "scene"
-    bl_options = {'DEFAULT_CLOSED'}
-    bpy.types.Scene.BBExportStep = bpy.props.IntProperty(attr="BBExportStep", name="Export Step",
-                                                         description="Export step", default=1, min=1, max=100,
-                                                         soft_min=1, soft_max=50)
-    bpy.types.Scene.BBRecordEP = bpy.props.BoolProperty(attr="BBRecordEP", name="EP Curves (global)",
-                                                        description="Do and render EP Visualization")
-
-    def draw(self, context):
-        scene = bpy.context.scene
-        layout = self.layout
-        r = layout.row()
-        r.prop(scene, "BBRecordEP")
-        r = layout.row()
-        r.operator("ops.bb2_operator_movie_refresh")
-        r = layout.row()
-        for ob in bpy.context.scene.objects:
-            try:
-                if ob.bb2_objectType == "PDBEMPTY":
-                    r.label(str(ob.name))
-                    r = layout.row()
-                    r.prop(ob, "bb2_outputOptions")
-                    r = layout.row()
-            except Exception as E:
-                print("An error occured in BB2_OUTPUT_PANEL: " + str(E))  # Do nothing...
-        r.prop(bpy.context.scene.render, "stamp_note_text", text="Notes")
-        r = layout.row()
-        r.prop(bpy.context.scene.render, "use_stamp", text="Information Overlay")
-        r = layout.row()
-        r.prop(bpy.context.scene.world.light_settings, "use_environment_light", text="Ambient Light")
-        r = layout.row()
-        r.prop(bpy.context.scene.render, "filepath", text="")
-        r = layout.row()
-        r.prop(bpy.context.scene, "frame_start")
-        r = layout.row()
-        r.prop(bpy.context.scene, "frame_end")
-        r = layout.row()
-        r.prop(bpy.context.scene, "BBExportStep")
-        r = layout.row()
-        stp = bpy.context.scene.BBPDBExportStep
-        num = ((bpy.context.scene.frame_end - bpy.context.scene.frame_start) / stp) + 1
-        r.label("A total of %d frames will be exported." % (num))
-        r = layout.row()
-        r.operator("ops.bb2_operator_anim")
-
-
-class bb2_operator_movie_refresh(types.Operator):
+class bb2_OT_operator_movie_refresh(bpy.types.Operator):
     bl_idname = "ops.bb2_operator_movie_refresh"
     bl_label = "Refresh MOVIE List"
     bl_description = "Refresh MOVIE List"
@@ -108,19 +51,19 @@ class bb2_operator_movie_refresh(types.Operator):
         return {'FINISHED'}
 
 
-bpy.utils.register_class(bb2_operator_movie_refresh)
+bpy.utils.register_class(bb2_OT_operator_movie_refresh)
 
 
-class bb2_operator_anim(types.Operator):
+class bb2_OT_operator_anim(bpy.types.Operator):
     bl_idname = "ops.bb2_operator_anim"
     bl_label = "Export Movie"
     bl_description = "Make a movie"
 
     def invoke(self, context, event):
         try:
-            bpy.context.user_preferences.edit.use_global_undo = False
+            context.preferences.edit.use_global_undo = False
             exportMovie()
-            bpy.context.user_preferences.edit.use_global_undo = True
+            context.preferences.edit.use_global_undo = True
         except Exception as E:
             s = "Export Movie Failed: " + str(E)
             print(s)
@@ -129,14 +72,14 @@ class bb2_operator_anim(types.Operator):
             return {'FINISHED'}
 
 
-bpy.utils.register_class(bb2_operator_anim)
+bpy.utils.register_class(bb2_OT_operator_anim)
 
 
 def exportMovie():
     step = bpy.context.scene.BBExportStep
     start = bpy.context.scene.frame_start
     end = bpy.context.scene.frame_end
-    bpy.context.scene.render.engine = 'BLENDER_RENDER'
+    bpy.context.scene.render.engine = 'BLENDER_EEVEE'
 
     a = time.time()
 
@@ -173,20 +116,20 @@ def exportMovie():
         for pdb in PDBdict:
             bpy.ops.object.select_all(action="DESELECT")
             for o in bpy.data.objects:
-                o.select = False
+                o.select_set(False)
             for o in bpy.data.objects:
                 try:
                     if (o.bb2_objectType == "ATOM") and (o.bb2_pdbID == PDBdict[pdb]):
-                        o.select = True
+                        o.select_set(True)
                     else:
-                        o.select = False
+                        o.select_set(False)
                 except Exception as E:
                     print("Error m02: " + str(E))
             # For every PDB ID [ = pdb in PDBdict], calls the right visualization function...
             tmpPDBName = str(PDBdict[pdb])
             tmpPDBobject = bpy.data.objects[tmpPDBName]
-            tmpPDBobject.select = True
-            bpy.context.scene.objects.active = tmpPDBobject
+            tmpPDBobject.select_set(True)
+            bpy.context.view_layer.objects.active = tmpPDBobject
             try:
                 print("tmpPDBobject: " + str(tmpPDBobject.name))
                 tmpMode = tmpPDBobject.bb2_outputOptions
@@ -195,51 +138,51 @@ def exportMovie():
                     bpy.context.scene.BBViewFilter = "1"
                     bpy.context.scene.BBAtomic = "0"
                     bpy.context.scene.BBAtomicMLP = False
-                    panel.updateView(residue=bpy.context.scene.objects.active)
+                    panel.updateView(residue=bpy.context.view_layer.objects.active)
                 elif tmpMode == "1":
                     # Rendering +SIDE
                     bpy.context.scene.BBViewFilter = "2"
                     bpy.context.scene.BBAtomic = "0"
                     bpy.context.scene.BBAtomicMLP = False
-                    panel.updateView(residue=bpy.context.scene.objects.active)
+                    panel.updateView(residue=bpy.context.view_layer.objects.active)
                 elif tmpMode == "2":
                     # Rendering +HYD
                     bpy.context.scene.BBViewFilter = "3"
                     bpy.context.scene.BBAtomic = "0"
                     bpy.context.scene.BBAtomicMLP = False
-                    panel.updateView(residue=bpy.context.scene.objects.active)
+                    panel.updateView(residue=bpy.context.view_layer.objects.active)
                 elif tmpMode == "3":
                     # Rendering Surface
                     bpy.context.scene.BBViewFilter = "4"
                     bpy.context.scene.BBAtomic = "0"
                     bpy.context.scene.BBAtomicMLP = False
-                    panel.updateView(residue=bpy.context.scene.objects.active)
+                    panel.updateView(residue=bpy.context.view_layer.objects.active)
                 elif tmpMode == "4":
                     # Rendering MLP MAIN
                     bpy.context.scene.BBViewFilter = "1"
                     bpy.context.scene.BBAtomic = "0"
                     bpy.context.scene.BBAtomicMLP = True
-                    panel.updateView(residue=bpy.context.scene.objects.active)
+                    panel.updateView(residue=bpy.context.view_layer.objects.active)
                     MLP.atomicMLP(pdb)
                 elif tmpMode == "5":
                     # Rendering MLP +SIDE
                     bpy.context.scene.BBViewFilter = "2"
                     bpy.context.scene.BBAtomic = "0"
                     bpy.context.scene.BBAtomicMLP = True
-                    panel.updateView(residue=bpy.context.scene.objects.active)
+                    panel.updateView(residue=bpy.context.view_layer.objects.active)
                     MLP.atomicMLP(pdb)
                 elif tmpMode == "6":
                     # Rendering MLP +HYD
                     bpy.context.scene.BBViewFilter = "3"
                     bpy.context.scene.BBAtomic = "0"
                     bpy.context.scene.BBAtomicMLP = True
-                    panel.updateView(residue=bpy.context.scene.objects.active)
+                    panel.updateView(residue=bpy.context.view_layer.objects.active)
                     MLP.atomicMLP(pdb)
                 elif tmpMode == "7":
                     # Rendering MLP SURFACE
                     bpy.context.scene.BBViewFilter = "4"
                     bpy.context.scene.BBAtomic = "1"
-                    MLP.mlp(pdb, True)
+                    MLP.mlp(pdb, force=True)
                     MLP.mlpRender(pdb)
             except Exception as E:
                 print("Error m03: " + str(E))
@@ -271,18 +214,20 @@ def exportMovie():
     bpy.context.scene.frame_start = start
     bpy.context.scene.frame_end = end
     print(time.time() - a)
+    MLP.CleanShape()
 
 
 def surfacesDestroyer():
+    bpy.context.view_layer.objects.active = None
     for s in bpy.data.objects:
-        s.select = False
-        try:
-            if s.bb2_objectType == "SURFACE":
-                s.select = True
-                bpy.context.scene.objects.active = s
-                bpy.ops.object.delete(use_global=False)
-        except Exception as E:
-            print("Error m05: " + str(E))
+        s.select_set(False)
+        if s.bb2_objectType == "SURFACE":
+            s.select_set(True)
+    try:
+        bpy.ops.object.delete(use_global=False)
+    except Exception as E:
+        print("Error m05: " + str(E))
+
 
 def ExistEP():
     for b in bpy.context.scene.objects:
@@ -292,4 +237,4 @@ def ExistEP():
 
 
 if __name__ == "__main__":
-    print("OUTPUT_MOVIE module created")
+    print("OUTPUT Movie Module")
