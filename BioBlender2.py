@@ -1,5 +1,5 @@
+# -*- coding: utf-8 -*-
 # Blender modules
-# 2020-03-28
 import bpy
 from bpy import *
 import bpy.path
@@ -24,6 +24,55 @@ import subprocess
 import sys
 import traceback
 import copy
+# ===== Fixes =================
+'''
+
+2021 / juL / 03
+- [added 'append_file_to_current_blend`] use instead of link_append
+- fixed reference to modelList -> tmpModel
+- added pymol.cmd to pyMolPathSearch
+'''
+
+bpy.types.Object.BBInfo = bpy.props.StringProperty()
+
+# ===== HELPERS ===============
+
+
+def append_file_to_current_blend(Path, objName, Directory):
+    """
+    for the time being this will permit older versions of Blender to use the append feature
+    """
+
+    print('appending file')
+    wm = bpy.ops.wm
+    # if hasattr(wm, 'link_append'):
+    if 'link_append' in dir(wm):
+        wm.link_append(filepath=Path, filename=objName, directory=Directory, link=False)
+    else:
+        wm.append(filepath=Path, filename=objName, directory=Directory)
+
+
+# ==================================================================================================================
+# ==================================================================================================================
+# ==================================================================================================================
+
+
+bpy.types.Object.BBInfo = bpy.props.StringProperty()  # From BioBlender1
+bpy.types.Object.bb2_pdbID = bpy.props.StringProperty()  # bb2_pdbID        --- Numerical, incremental
+bpy.types.Object.bb2_objectType = bpy.props.StringProperty()  # bb2_objectType   --- ATOM, PDBEMPTY, CHAINEMPTY,
+# SURFACE
+bpy.types.Object.bb2_subID = bpy.props.StringProperty()  # bb2_subID --- e.g.: Chain ID
+bpy.types.Object.bb2_pdbPath = bpy.props.StringProperty()  # bb2_pdbPath --- just for Empties; e.g.: in Setup function
+bpy.types.Object.bb2_outputOptions = bpy.props.EnumProperty(name="bb2_outputoptions", default="1",
+                                                            items=[("0", "Main", ""), ("1", "+Side", ""),
+                                                                   ("2", "+Hyd", ""), ("3", "Surface", ""),
+                                                                   ("4", "MLP Main", ""), ("5", "MLP +Side", ""),
+                                                                   ("6", "MLP +Hyd", ""), ("7", "MLP Surface", "")])
+
+# ==================================================================================================================
+# ==================================================================================================================
+# ==================================================================================================================
+
 
 # OS detection
 opSystem = ""
@@ -38,33 +87,38 @@ else:
 homePath = os.path.dirname(__file__) + os.sep
 
 # Blender Path
-blenderPath = str(sys.executable)
+blenderPath = str(sys.executable[:-27]) + os.sep + "blender.exe"
+if (opSystem == "linux") or (opSystem == "darwin"):
+    blenderPath = "blender"
 
 # Python Path
 if (opSystem == "linux") or (opSystem == "darwin"):
     pyPath = "python"
+    if os.path.exists("/usr/bin/python3"):
+        pyPath = "python3"
+    elif os.path.exists("/usr/bin/python"):
+        pyPath = "python"
+    elif os.path.exists("/usr/bin/python2"):
+        pyPath = "python2"
 else:
     pyPath = ""
     pyPathSearch = [
-        "%systemdrive%\\Python35\\python.exe",
-        "%systemdrive%\\Python35\\python.exe",
-        "%systemdrive%\\Python35\\python.exe",
+        "%systemdrive%\\Python37\\python.exe",
+        "%systemdrive%\\Python37\\python.exe",
+        "%systemdrive%\\Python37\\python.exe",
         "/usr/bin/python"
     ]
 
 # Detecting PyMol path
 pyMolPath = ""
 pyMolPathSearch = [
-    "%systemdrive%\\Python35\\Scripts\\pymol.cmd",
+    "%systemdrive%\\Python37\\Scripts\\pymol.cmd",
     "%programfiles%\\PyMOL\\PyMOL\\PymolWin.exe",
-    "%programfiles%\\PyMOL\\PyMOLWin.exe",
     "%programfiles%\\DeLano Scientific\\PyMOL Eval\\PymolWin.exe",
     "%programfiles%\\DeLano Scientific\\PyMOL\\PymolWin.exe",
     "%programfiles(x86)%\\PyMOL\\PyMOL\\PymolWin.exe",
-    "%programfiles(x86)%\\PyMOL\\PyMOLWin.exe",
     "%programfiles(x86)%\\DeLano Scientific\\PyMOL Eval\\PymolWin.exe",
     "%programfiles(x86)%\\DeLano Scientific\\PyMOL\\PymolWin.exe",
-    "%ProgramData%\\PyMOL\\PyMOLWin.exe",
 ]
 
 if (opSystem == "linux") or (opSystem == "darwin"):
@@ -84,7 +138,11 @@ else:
             if os.path.exists(ExpandEnvironmentStrings(i)):
                 pyPath = ExpandEnvironmentStrings(i)
                 break
-#####################################################################################3
+
+# ==================================================================================================================
+# ==================================================================================================================
+# ==================================================================================================================
+
 
 bootstrap = -1  # A way to avoid infamous RestricContext error on boot
 
@@ -118,6 +176,11 @@ origin = []  # list[3] of dx grid origin
 dxCache = {}  # cache to speed up vertexColor mapping
 maxCurveSet = 4
 
+# ==================================================================================================================
+# ==================================================================================================================
+# ==================================================================================================================
+
+
 # Define common atom name as variables to avoid RSI from typing quotes
 C = "C"
 N = "N"
@@ -139,10 +202,10 @@ NucleicAtoms = ["P", "O2P", "OP2", "O1P", "OP1", "O5'", "C5'", "C4'", "C3'", "O4
 NucleicAtoms_Filtered = ["P", "O5'", "C5'", "C4'", "C3'", "O3'"]
 
 # Define atom color [R,G,B]
-color = {C: [0.1, 0.1, 0.1], CA: [0.4, 1.0, 0.14], N: [0.24, 0.41, 0.7], O: [0.46, 0.1, 0.1], S: [1.0, 0.75, 0.17],
-         P: [1.0, 0.37, 0.05], FE: [1.0, 0.5, 0.0], MG: [0.64, 1.0, 0.05], ZN: [0.32, 0.42, 1], CU: [1.0, 0.67, 0.0],
-         NA: [0.8, 0.48, 1.0], K: [0.72, 0.29, 1.0], CL: [0.1, 1.0, 0.6], MN: [0.67, 0.6, 1.0], H: [0.9, 0.9, 0.9],
-         F: [0.27, 0.8, 0.21]}
+color = {C: [0.1, 0.1, 0.1, 1.0], CA: [0.4, 1.0, 0.14, 1.0], N: [0.24, 0.41, 0.7, 1.0], O: [0.46, 0.1, 0.1, 1.0], S: [1.0, 0.75, 0.17, 1.0],
+         P: [1.0, 0.37, 0.05, 1.0], FE: [1.0, 0.5, 0.0, 1.0], MG: [0.64, 1.0, 0.05, 1.0], ZN: [0.32, 0.42, 1, 1.0], CU: [1.0, 0.67, 0.0, 1.0],
+         NA: [0.8, 0.48, 1.0, 1.0], K: [0.72, 0.29, 1.0, 1.0], CL: [0.1, 1.0, 0.6, 1.0], MN: [0.67, 0.6, 1.0, 1.0], H: [0.9, 0.9, 0.9, 1.0],
+         F: [0.27, 0.8, 0.21, 1.0]}
 
 dic_lipo_materials = {}
 
@@ -346,34 +409,13 @@ scale_cov = {C: [1.1, 0.6], CA: [0.99, 0.6], N: [1.07, 0.6], O: [1.04, 0.6], S: 
              FE: [0.64, 0.6], MG: [0.65, 0.6], ZN: [0.74, 0.6], CU: [0.72, 0.6], NA: [0.95, 0.6], K: [1.33, 0.6],
              CL: [1.81, 0.6], MN: [0.46, 0.6], H: [0.53, 0.3], F: [1.36, 0.6]}
 
+# ==================================================================================================================
+# ==================================================================================================================
+# ==================================================================================================================
 
-
-# ===== HELPERS ===============
-
-def append_file_to_current_blend(Path, objName, Directory):
-    """
-    for the time being this will permit older versions of Blender to use the append feature
-	"""
-    print('appending file')
-    wm = bpy.ops.wm
-    # if hasattr(wm, 'link_append'):
-    if 'link_append' in dir(wm):
-        wm.link_append(filepath=Path, filename=objName, directory=Directory, link=False)
-    else:
-        wm.append(filepath=Path, filename=objName, directory=Directory)
-
-# Necessarily here
-bpy.types.Object.BBInfo = bpy.props.StringProperty()  # From BioBlender1
-bpy.types.Object.bb2_pdbID = bpy.props.StringProperty()  # bb2_pdbID        	--- Numerical, incremental
-bpy.types.Object.bb2_objectType = bpy.props.StringProperty()  # bb2_objectType   	--- ATOM, PDBEMPTY, CHAINEMPTY,
-# SURFACE
-bpy.types.Object.bb2_subID = bpy.props.StringProperty()  # bb2_subID 	--- e.g.: Chain ID
-bpy.types.Object.bb2_pdbPath = bpy.props.StringProperty()  # bb2_pdbPath 	--- just for Empties; e.g.: in Setup function...
-bpy.types.Object.bb2_outputOptions = bpy.props.EnumProperty(name="bb2_outputoptions", default="1",
-                                                            items=[("0", "Main", ""), ("1", "+Side", ""),
-                                                                   ("2", "+Hyd", ""), ("3", "Surface", ""),
-                                                                   ("4", "MLP Main", ""), ("5", "MLP +Side", ""),
-                                                                   ("6", "MLP +Hyd", ""), ("7", "MLP Surface", "")])
+# ==================================================================================================================
+# ==================================================================================================================
+# ==================================================================================================================
 
 if __name__ == "__main__":
     print("BioBlender2 module created")
