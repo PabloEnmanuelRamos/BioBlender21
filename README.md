@@ -2,7 +2,7 @@
 BioBlender is an addon for Blender, aimed at providing tools for the import and elaboration of biological molecules.
 It consists of several functions, some executed by Blender and/or its Game Engine, and some others performed by external programs, such as PyMOL, APBS etc.
 
-It was developed by the Scientific Visualization Unit of the Institute of Cliniclal Physiology of the CNR of Italy in Pisa, with the contribution of several colleagues.
+It was developed by the Scientific Visualization Unit of the Institute of Clinical Physiology of the CNR of Italy in Pisa, with the contribution of several colleagues.
 
 We have now made it an Open Project, with the intent of keeping it updated, as long as Blender keeps moving on, and of possibly introducing new, better and useful features.
 
@@ -13,14 +13,14 @@ Also, as BioBlender is supposed to handle different types of molecules, we will 
 
   - Single protein, multiple conformations File: "01_CaM_protein3conformations.pdb";
   - Double strand DNA fragment  File  "02_4IHV_dsDNA.pdb";
-  - Glycoprotein (protein with sugar-like molcule attached) file "05_glycoprotein_4AY9_FSH.pdb";
+  - Glycoprotein (protein with sugar-like molecule attached) file "05_glycoprotein_4AY9_FSH.pdb";
   - Small protein for testing GE. File "06_1L2Y_4GE.pdb";
   - Composite protein (dimer), file: "04_Dimer_1A4U.pdb";
   - Interacting protein/DNA, file "03_3IV5_ProteinComplex.pdb".
 
 The SciVis Team is grateful to all that will contribute to this project.
 
-#Getting Started#
+# Getting Started #
 **BioBlender is still under development**
 
 ## Prerequisites ##
@@ -28,7 +28,7 @@ The SciVis Team is grateful to all that will contribute to this project.
 - [Python 3.7.7](https://www.python.org/downloads/)
 - [PyMol](http://sourceforge.net/projects/pymol/?source=directory)
 
-##Using the command line##
+## Using the command line ##
 This set up will allow you to update dynamically to the latest snapshot of BioBlender. You need to be able to use the command line and have git properly set up.
 ### Unix/Mac ###
 1. Get the latest version
