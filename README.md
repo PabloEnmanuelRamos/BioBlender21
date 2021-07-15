@@ -28,7 +28,7 @@ The SciVis Team is grateful to all that will contribute to this project.
 - [Python 3.7.7](https://www.python.org/downloads/)
 - [PyMol](http://sourceforge.net/projects/pymol/?source=directory)
 
-##Using the command line##
+## Using the command line ##
 This set up will allow you to update dynamically to the latest snapshot of BioBlender. You need to be able to use the command line and have git properly set up.
 ### Unix/Mac ###
 1. Get the latest version
