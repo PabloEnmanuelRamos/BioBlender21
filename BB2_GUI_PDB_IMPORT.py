@@ -675,7 +675,7 @@ def core_createModels():
         if len(pdbIDmodelsDictionary[pdbID]) != 1:
             # insert keyframe for animations
             try:
-                bpy.ops.anim.keyframe_insert_menu(type='LocRotScale')
+                bpy.ops.anim.keyframe_insert_menu(type='Location')
             except Exception as E:
                 print("Exception: " + str(E))
             if FinalFrame == 250:
