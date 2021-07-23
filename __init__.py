@@ -61,7 +61,7 @@ class BB2_PT_GUI_PDB_IMPORT(bpy.types.Panel):
     bl_options = {'DEFAULT_CLOSED'}
     bpy.types.Scene.BBDeltaFrame = bpy.props.IntProperty(attr="BBDeltaFrame", name="Keyframe Interval",
                                                          description="The number of in-between frames between each model for animation",
-                                                         default=100, min=1, max=200, soft_min=5, soft_max=50)
+                                                         default=100, min=1, max=500, soft_min=5, soft_max=200)
     bpy.types.Scene.BBImportPath = bpy.props.StringProperty(attr="BBImportPath", description="", default="",
                                                             subtype="FILE_PATH")
     bpy.types.Scene.BBModelRemark = bpy.props.StringProperty(attr="BBModelRemark",
