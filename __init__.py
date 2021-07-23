@@ -42,7 +42,7 @@ bl_info = {
     "description" : "BioBlender 2.1",
     "warning" : "",
     "wiki_url" : "",
-    "tracker_url" : "http://bioblender.eu/?page_id=665",
+    "tracker_url" : "http://www.scivis.it/community/main-forum/bioblender-for-blender-2-93/",
     "category" : "Mesh"
 }
 
