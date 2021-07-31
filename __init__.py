@@ -71,7 +71,7 @@ class BB2_PT_GUI_PDB_IMPORT(bpy.types.Panel):
                                                                 default="")
     bpy.types.Scene.BBImportChain = bpy.props.StringProperty(attr="BBImportChain", name="", description="Import Chain",
                                                              default="")
-    bpy.types.Scene.BBImportChainOrder = bpy.props.StringProperty(attr="BBImportChainOrder, name="",
+    bpy.types.Scene.BBImportChainOrder = bpy.props.StringProperty(attr="BBImportChainOrder", name="",
                                                                   description="List of chains to be imported",
                                                                   default="")
     bpy.types.Scene.BBImportOrder = bpy.props.StringProperty(attr="BBImportOrder",
