@@ -27,7 +27,7 @@ from .BioBlender2 import *
 from .BB2_PANEL_VIEW import *
 from .BB2_MLP_PANEL import *
 from .BB2_EP_PANEL import *
-from .BB2_PDB_OUTPUT_PANEL import *
+#from .BB2_PDB_OUTPUT_PANEL import *
 from .BB2_NMA_PANEL import *
 from .BB2_OUTPUT_PANEL import *
 
@@ -62,16 +62,16 @@ class BB2_PT_GUI_PDB_IMPORT(bpy.types.Panel):
     bpy.types.Scene.BBDeltaFrame = bpy.props.IntProperty(attr="BBDeltaFrame", name="Keyframe Interval",
                                                          description="The number of in-between frames between each model for animation",
                                                          default=100, min=1, max=500, soft_min=5, soft_max=200)
-    bpy.types.Scene.BBImportPath = bpy.props.StringProperty(attr="BBImportPath", description="", default="",
+    bpy.types.Scene.BBImportPath = bpy.props.StringProperty(attr="BBImportPath", name="", description="Select PBD file", default="",
                                                             subtype="FILE_PATH")
-    bpy.types.Scene.BBModelRemark = bpy.props.StringProperty(attr="BBModelRemark",
+    bpy.types.Scene.BBModelRemark = bpy.props.StringProperty(attr="BBModelRemark", name="",
                                                              description="Model name tag for multiple imports",
                                                              default="protein0")
-    bpy.types.Scene.BBImportFeedback = bpy.props.StringProperty(attr="BBImportFeedback", description="Import Feedback",
+    bpy.types.Scene.BBImportFeedback = bpy.props.StringProperty(attr="BBImportFeedback", name="", description="Import Feedback",
                                                                 default="")
-    bpy.types.Scene.BBImportChain = bpy.props.StringProperty(attr="BBImportChain", description="Import Chain",
+    bpy.types.Scene.BBImportChain = bpy.props.StringProperty(attr="BBImportChain", name="", description="Import Chain",
                                                              default="")
-    bpy.types.Scene.BBImportChainOrder = bpy.props.StringProperty(attr="BBImportChainOrder",
+    bpy.types.Scene.BBImportChainOrder = bpy.props.StringProperty(attr="BBImportChainOrder, name="",
                                                                   description="List of chains to be imported",
                                                                   default="")
     bpy.types.Scene.BBImportOrder = bpy.props.StringProperty(attr="BBImportOrder",
@@ -86,33 +86,36 @@ class BB2_PT_GUI_PDB_IMPORT(bpy.types.Panel):
         scene = context.scene
         split = layout.split()
         split.prop(scene, "BBImportPath")
-        split.operator("ops.bb2_operator_make_preview")
+        if len(bpy.context.scene.BBImportPath) >= 4:
+            split.operator("ops.bb2_operator_make_preview")
         row = layout.row()
         row.prop(scene, "BBModelRemark")
         row = layout.row()
-        row.prop(scene, "BBImportFeedback", emboss=False)
-        row = layout.row()
-        # left column
-        split = layout.split()
-        col = split.column()
-        col.prop(scene, "BBImportOrder", text="")
-        # right column
-        col = split.column()
-        col.prop(scene, "BBDeltaFrame")
-        # next row
-        row = layout.row()
-        row.prop(scene, "BBImportChain", emboss=False)
-        row = layout.row()
-        row.prop(scene, "BBImportChainOrder")
-        row = layout.row()
-        row.prop(scene, "BBImportHydrogen")
-        row = layout.row()
-        row.scale_y = 2
-        if importReady:
+        if importReady and len(bpy.context.scene.BBImportPath) >= 4:
+            # left column
+            split = layout.split()
+            col = split.column()
+            col.prop(scene, "BBImportOrder", text="")
+            # right column
+            col = split.column()
+            col.prop(scene, "BBDeltaFrame")
+            # next row
+            row = layout.row()
+            row.prop(scene, "BBImportFeedback", emboss=False)
+            row = layout.row()
+            row.prop(scene, "BBImportChain", emboss=False)
+            row = layout.row()
+            row.prop(scene, "BBImportChainOrder")
+            row = layout.row()
+            row.prop(scene, "BBImportHydrogen")
+            row = layout.row()
+            row.scale_y = 2
             row.operator("ops.bb2_operator_import")
         else:
+            row = layout.row()
+            row.scale_y = 2
             row.active = False
-            row.operator("ops.bb2_operator_import", text="Error: Not Ready to Import", icon="X")
+            row.operator("ops.bb2_operator_import", text="Not Ready to Import", icon="X")
 
 
 class bb2_OT_operator_make_preview(bpy.types.Operator):
@@ -122,16 +125,17 @@ class bb2_OT_operator_make_preview(bpy.types.Operator):
 
     def invoke(self, context, event):
         try:
-            if bootstrap == -1:
-                bootstrapping()
             global importReady
             importReady = False
-            bpy.context.scene.BBImportFeedback = ""
-            bpy.context.scene.BBImportChain = ""
-            bpy.context.scene.BBImportOrder = ""
-            bpy.context.scene.BBImportChainOrder = ""
-            importReady = importPreview(retrieved=False)
-            print("Import Ready: " + str(importReady))
+            if len(bpy.context.scene.BBImportPath) >= 4:
+                if bootstrap == -1:
+                    bootstrapping()
+                bpy.context.scene.BBImportFeedback = ""
+                bpy.context.scene.BBImportChain = ""
+                bpy.context.scene.BBImportOrder = ""
+                bpy.context.scene.BBImportChainOrder = ""
+                importReady = importPreview(retrieved=False)
+                print("Import Ready: " + str(importReady))
         except Exception as E:
             s = "Import Failed 1: " + str(E)
             print(s)
@@ -155,7 +159,7 @@ class BB2_PT_PANEL_VIEW(bpy.types.Panel):
     bpy.types.Scene.BBMLPSolventRadius = bpy.props.FloatProperty(attr="BBMLPSolventRadius", name="Solvent Radius",
                                                                  description="Solvent Radius used for Surface Generation",
                                                                  default=1.4, min=0.2, max=5, soft_min=0.4, soft_max=4)
-    bpy.types.Scene.BBViewFilter = bpy.props.EnumProperty(attr="BBViewFilter", name="View Filter",
+    bpy.types.Scene.BBViewFilter = bpy.props.EnumProperty(attr="BBViewFilter", name="",
                                                           description="Select a view mode",
                                                           items=(("1", "Main Chain", ""),
                                                                  ("2", "+ Side Chain", ""),
@@ -176,12 +180,12 @@ class BB2_PT_PANEL_VIEW(bpy.types.Panel):
                 r.prop(bpy.context.view_layer.objects.active, "BBInfo", icon="MATERIAL", emboss=False)
             else:
                 r.label(text = "No model selected")
-
         split = layout.split()
         r = split.row()
         r.prop(scene, "BBViewFilter", expand=False)
-        split = split.row(align=True)
-        split.prop(scene, "BBMLPSolventRadius")
+        if bpy.context.scene.BBViewFilter == "4":
+            split = split.row(align=True)
+            split.prop(scene, "BBMLPSolventRadius")
         r = layout.row()
         r.operator("ops.bb2_view_panel_update", text="APPLY")
 
@@ -369,7 +373,7 @@ class BB2_PT_EP_PANEL(bpy.types.Panel):
 
 # ===== CLASS  PDB EXPORT  ============================================================================================
 
-
+"""
 class BB2_PT_PDB_OUTPUT_PANEL(bpy.types.Panel):
     bl_label = "BioBlender2 PDB Output"
     bl_idname = "SCENE_PT_BB2_PDB_OUTPUT_PANEL"
@@ -398,7 +402,7 @@ class BB2_PT_PDB_OUTPUT_PANEL(bpy.types.Panel):
         num = ((bpy.context.scene.frame_end - bpy.context.scene.frame_start) / bpy.context.scene.BBPDBExportStep) + 1
         r.label(text = "A total of %d frames will be exported." % num)
 
-
+"""
 # ===== CLASS EXPORT MOVIE ===========================================================================================
 
 class BB2_PT_OUTPUT_PANEL(bpy.types.Panel):
@@ -443,9 +447,9 @@ class BB2_PT_OUTPUT_PANEL(bpy.types.Panel):
         r = layout.row()
         r.prop(bpy.context.scene, "BBExportStep")
         r = layout.row()
-        stp = bpy.context.scene.BBPDBExportStep
+        stp = bpy.context.scene.BBExportStep
         num = ((bpy.context.scene.frame_end - bpy.context.scene.frame_start) / stp) + 1
-        r.label(text= "A total of %d frames will be exported." % (((bpy.context.scene.frame_end - bpy.context.scene.frame_start) / bpy.context.scene.BBPDBExportStep) + 1))
+        r.label(text= "A total of %d frames will be exported." % (((bpy.context.scene.frame_end - bpy.context.scene.frame_start) / bpy.context.scene.BBExportStep) + 1))
         r = layout.row()
         r.operator("ops.bb2_operator_anim")
 
@@ -508,7 +512,7 @@ classes = (
     # BB2_PT_PHYSICS_SIM_PANEL,
     BB2_PT_MLP_PANEL,
     BB2_PT_EP_PANEL,
-    BB2_PT_PDB_OUTPUT_PANEL,
+    #BB2_PT_PDB_OUTPUT_PANEL,
     BB2_PT_OUTPUT_PANEL,
     BB2_PT_NMA_PANEL,
 )
