@@ -51,10 +51,11 @@ def bootstrapping():
             bpy.data.materials[-1].name = "C"
             bpy.data.materials["C"].diffuse_color = color[C]
             bpy.data.materials["C"].node_tree.nodes["Principled BSDF"].inputs[0].default_value = color[C]
-        except:
+        except Exception as E:
             bpy.ops.material.new.poll()
             bpy.data.materials[-1].name = "C"
             bpy.data.materials["C"].diffuse_color = color[C]
+            bpy.data.materials["C"].node_tree.nodes["Principled BSDF"].inputs[0].default_value = color[C]
 
     for m in elencoMateriali:
         if not (m in bpy.data.materials):
@@ -113,6 +114,7 @@ def create_fi_materials():
                                                                                       float(valuecolor),
                                                                                       float(valuecolor),
                                                                                       1.0]
+                    bpy.data.materials["matlipo_" + str(valuecolor)].node_tree.nodes["Principled BSDF"].inputs[0].default_value = [float(valuecolor), float(valuecolor), float(valuecolor), 1.0]
                     dic_lipo_materials[str(valuecolor)] = "matlipo_" + str(valuecolor)
     except Exception as E:
         raise Exception("Unable to create lipo materials", E)
@@ -147,7 +149,18 @@ class bb2_OT_operator_import(bpy.types.Operator):
             if bootstrap == 0:
                 bootstrap()
             bpy.context.preferences.edit.use_global_undo = False
-            core_importFile()
+            global chainPDB
+            chainPDB = " "
+            for chain in str(bpy.context.scene.BBImportChainOrder).split(','):
+                chainPDB = str(chain)
+                core_importFile()
+            bpy.context.scene.BBImportFeedback = ""
+            bpy.context.scene.BBImportChain = ""
+            bpy.context.scene.BBImportOrder = ""
+            bpy.context.scene.BBImportChainOrder = ""
+            bpy.context.scene.BBModelRemark = "protein0"
+            bpy.context.scene.BBImportPath = ""
+            bpy.context.scene.BBImportHydrogen = False
             bpy.context.preferences.edit.use_global_undo = True
         except Exception as E:
             s = "Import Failed 2: " + str(E)
@@ -358,7 +371,7 @@ def core_parsePDB(filePath):
     chainCache = {}  # a cache to that contains all non-H atoms
     chainCache_Nucleic = {}
 
-    pdbIDmodelsDictionary[pdbID] = {}
+    pdbIDmodelsDictionary[int(pdbID)] = {}
 
     global importChainOrderList
     importChainOrderList = []
@@ -389,11 +402,12 @@ def core_parsePDB(filePath):
             line = line.replace("\r", "")
             line = PDBString(line)
             tag = line.get("tag")
+            chainID = line.get("chainID")
             # if tag is tmpPDBmodelDictionary, load tmpPDBmodelDictionary id
             if tag == "MODEL":
                 tmpPDBmodelID = line.get("modelID")
             # if tag is ATOM, load column data (skip this if tmpPDBmodelID is not in list of models)
-            elif (tmpPDBmodelID in tmpPDBmodelImportOrder) and (tag == "ATOM" or tag == "HETATM"):
+            elif (tmpPDBmodelID in tmpPDBmodelImportOrder) and (tag == "ATOM" or tag == "HETATM") and chainID == chainPDB:
                 # check for element type
                 atomName = line.get("name")
                 elementName = line.get("element")
@@ -430,16 +444,16 @@ def core_parsePDB(filePath):
                         "name") + "#" + line.get("chainID") + "#" + line.get("element")
 
             if (tag == "END" and (tmpPDBmodelID in tmpPDBmodelImportOrder)) and (tmpPDBmodelID == 0):
-                (pdbIDmodelsDictionary[pdbID])[tmpPDBmodelID] = tmpPDBmodelDictionary
+                (pdbIDmodelsDictionary[int(pdbID)])[tmpPDBmodelID] = tmpPDBmodelDictionary
                 tmpPDBmodelDictionary = {}
             elif (tag == "ENDMDL" or tag == "MODEL") and (tmpPDBmodelID in tmpPDBmodelImportOrder):
-                (pdbIDmodelsDictionary[pdbID])[tmpPDBmodelID] = tmpPDBmodelDictionary
+                (pdbIDmodelsDictionary[int(pdbID)])[tmpPDBmodelID] = tmpPDBmodelDictionary
                 tmpPDBmodelDictionary = {}
-    mainChainCacheDict[pdbID] = mainChainCache
-    mainChainCache_NucleicDict[pdbID] = mainChainCache_Nucleic
-    mainChainCache_Nucleic_FilteredDict[pdbID] = mainChainCache_Nucleic_Filtered
-    chainCacheDict[pdbID] = chainCache
-    chainCache_NucleicDict[pdbID] = chainCache_Nucleic
+    mainChainCacheDict[int(pdbID)] = mainChainCache
+    mainChainCache_NucleicDict[int(pdbID)] = mainChainCache_Nucleic
+    mainChainCache_Nucleic_FilteredDict[int(pdbID)] = mainChainCache_Nucleic_Filtered
+    chainCacheDict[int(pdbID)] = chainCache
+    chainCache_NucleicDict[int(pdbID)] = chainCache_Nucleic
     core_sort_hr()
 
 
@@ -471,7 +485,7 @@ def core_parseTXT(filePath):
                 line = line.set(46, z)
                 tmpPDBmodelDictionary[key] = line
                 atomCounter += 1
-            (pdbIDmodelsDictionary[pdbID])[0] = tmpPDBmodelDictionary
+            (pdbIDmodelsDictionary[int(pdbID)])[0] = tmpPDBmodelDictionary
             tmpPDBmodelDictionary = {}
     core_sort_hr()
 
@@ -508,13 +522,15 @@ def core_createModels():
     print("core_create_Models")
     # Empty creation
     bpy.ops.object.empty_add(type='PLAIN_AXES')
-    bpy.context.view_layer.objects.active.name = copy.copy(str(bpy.context.scene.BBModelRemark))
-    parentEmpty = bpy.data.objects[str(bpy.context.scene.BBModelRemark)]
+    bpy.context.view_layer.objects.active.name = copy.copy(str(bpy.context.scene.BBModelRemark) + "_" + str(chainPDB))
     bpy.context.view_layer.objects.active.bb2_pdbID = copy.copy(str(pdbID))
+    parentEmpty = bpy.context.view_layer.objects.active
     bpy.context.view_layer.objects.active.bb2_objectType = "PDBEMPTY"
+    bpy.context.view_layer.objects.active.bb2_subID = copy.copy(str(chainPDB))
     bpy.context.view_layer.objects.active.bb2_outputOptions = "1"
     bpy.context.view_layer.objects.active.bb2_pdbPath = copy.copy(str(bpy.context.scene.BBImportPath))
-    bpy.data.objects[str(bpy.context.scene.BBModelRemark)].location = (0.0, 0.0, 0.0)
+    bpy.context.view_layer.objects.active.location = (0.0, 0.0, 0.0)
+    bpy.context.view_layer.objects.active.hide_set(True)
     FinalFrame = bpy.data.scenes["Scene"].frame_end
     global chainCache
     global curFrame
@@ -523,7 +539,7 @@ def core_createModels():
     curFrame = 1
     # Build 3D scene from pdbIDmodelsDictionary
     for m in tmpPDBmodelImportOrder:
-        model = (pdbIDmodelsDictionary[pdbID])[m]
+        model = (pdbIDmodelsDictionary[int(pdbID)])[m]
         # Prova: se il dizionario-model in esame e' vuoto, saltalo (non e' stato selezionato il relativo model nella lista)
         if not (model):
             continue
@@ -561,22 +577,23 @@ def core_createModels():
                         # add atom info as RNA string to each object
                         obj.BBInfo = str(entry[1])
                         obj.bb2_pdbID = copy.copy(str(pdbID))
+                        obj.bb2_subID = obj.BBInfo[21:22]
                         obj.bb2_objectType = "ATOM"
                         # Setting EMPTY as parent for this object
                         obj.select_set(True)
-                        obj.parent = bpy.data.objects[str(parentEmpty.name)]
-                Frame[parentEmpty.name] = 0
+                        obj.parent = parentEmpty
+                Frame[parentEmpty] = 0
             except Exception as E:
                 raise Exception("Unable to generate 3D model from PDB File", E)
 
             # MAKE BONDS
             try:
-                mainChainCache = mainChainCacheDict[pdbID]
-                mainChainCache_Nucleic = mainChainCache_NucleicDict[pdbID]
-                mainChainCache_Nucleic_Filtered = mainChainCache_Nucleic_FilteredDict[pdbID]
-                chainCache = chainCacheDict[pdbID]
-                chainCache_Nucleic = chainCache_NucleicDict[pdbID]
-                tmpModel = (pdbIDmodelsDictionary[pdbID])[m]
+                mainChainCache = mainChainCacheDict[int(pdbID)]
+                mainChainCache_Nucleic = mainChainCache_NucleicDict[int(pdbID)]
+                mainChainCache_Nucleic_Filtered = mainChainCache_Nucleic_FilteredDict[int(pdbID)]
+                chainCache = chainCacheDict[int(pdbID)]
+                chainCache_Nucleic = chainCache_NucleicDict[int(pdbID)]
+                tmpModel = (pdbIDmodelsDictionary[int(pdbID)])[m]
                 # =====
                 cacheSize = len(mainChainCache) - 1
                 for i, entry in enumerate(mainChainCache):
@@ -665,14 +682,14 @@ def core_createModels():
                 raise Exception("Unable to generate all bonds and constraints:", E)
         # for all models, insert key frame
         try:
-            for key, line in ((pdbIDmodelsDictionary[pdbID])[m]).items():
+            for key, line in ((pdbIDmodelsDictionary[int(pdbID)])[m]).items():
                 OBJ = bpy.data.objects[key]
                 OBJ.select_set(True)
                 OBJ.location = line.get("loc")
         except Exception as E:
             raise Exception("Unable to place 3D atoms:", E)
 
-        if len(pdbIDmodelsDictionary[pdbID]) != 1:
+        if len(pdbIDmodelsDictionary[int(pdbID)]) != 1:
             # insert keyframe for animations
             try:
                 bpy.ops.anim.keyframe_insert_menu(type='Location')
@@ -864,39 +881,20 @@ def addRigidBodyRotamer(objectparent, objecttarget):
     matrot = Matrix.Rotation(angle2mapx2hingevector, 3, rotvec2mapx2hingevector)
     euler = matrot.to_euler()
 
+def core_EmptyPDBsCreation():
+    for chain in str(bpy.context.scene.BBImportChainOrder).split(","):
+        bpy.ops.object.empty_add(type='PLAIN_AXES')
+        bpy.context.view_layer.objects.active.name = copy.copy(str(bpy.context.scene.BBModelRemark) + "_" + str(chainPDB))
+        bpy.context.view_layer.objects.active.bb2_pdbID = copy.copy(str(pdbID))
+        bpy.context.view_layer.objects.active.bb2_objectType = "PDBEMPTY"
+        bpy.context.view_layer.objects.active.bb2_subID = copy.copy(str(chainPDB))
+        bpy.context.view_layer.objects.active.bb2_outputOptions = "1"
+        bpy.context.view_layer.objects.active.bb2_pdbPath = copy.copy(str(bpy.context.scene.BBImportPath))
+        bpy.context.view_layer.objects.active.location = (0.0, 0.0, 0.0)
+        bpy.context.view_layer.objects.active.hide_set(True)
 
 def core_EmptyChainsCreation():
     print("Empty Chains creation")
-    chainsList = []
-    for o in bpy.data.objects:
-        if (o.bb2_pdbID == pdbID):
-            if o.bb2_objectType == "ATOM":
-                tmpChain = str(((o.BBInfo)[21:22]).strip())
-                if tmpChain not in chainsList:
-                    # Creo la Empty, con le opportune proprieta'
-                    bpy.ops.object.empty_add(type='PLAIN_AXES')
-                    bpy.context.view_layer.objects.active.name = copy.copy(str(bpy.context.scene.BBModelRemark))
-                    bpy.context.view_layer.objects.active.bb2_pdbID = copy.copy(str(pdbID))
-                    bpy.context.view_layer.objects.active.bb2_objectType = "CHAINEMPTY"
-                    bpy.context.view_layer.objects.active.bb2_subID = copy.copy(str(tmpChain))
-                    bpy.context.view_layer.objects.active.location = (0.0, 0.0, 0.0)
-                    tmpName = copy.copy(str(bpy.context.view_layer.objects.active.name))
-                    cE = bpy.data.objects[tmpName]
-                    # imposto la Empty come figlia della Parent Empty
-                    for d in bpy.data.objects:
-                        if d.bb2_pdbID == pdbID:
-                            if d.bb2_objectType == "PDBEMPTY":
-                                cE.parent = bpy.data.objects[str(d.name)]
-                    # imposto l'oggetto come figlio di questa Empty, non piu' della Parent Empty
-                    o.parent = cE
-                    # inserisco questa sigla nella lista di ID
-                    chainsList.append(tmpChain)
-                else:
-                    for c in bpy.data.objects:
-                        if c.bb2_pdbID == pdbID:
-                            if c.bb2_objectType == "CHAINEMPTY":
-                                if c.bb2_subID == tmpChain:
-                                    o.parent = bpy.data.objects[str(c.name)]
     global Address
     Address = bpy.context.scene.BBImportPath
     core_cleaningUp()
@@ -910,14 +908,7 @@ def core_cleaningUp():
     print("cleaning up")
     bpy.context.scene.frame_set(1)
     global pdbID
-    """ for area in bpy.context.screen.areas:
-       # if area.type == 'VIEW_3D':
-          #  area.spaces[0].show_relationship_lines = False
-    #try:
-        #atomAction()
-    #except Exception as E:
-        #print("No models, no action" + str(E))
-    """
+
     bpy.ops.object.select_all(action="DESELECT")
     for o in bpy.data.objects:
         o.select_set(False)
@@ -930,15 +921,6 @@ def core_cleaningUp():
             break
 
     bpy.ops.object.select_all(action="DESELECT")
-    for o in bpy.data.objects:
-        if o.bb2_pdbPath and o.bb2_objectType == 'PDBEMPTY' and o.bb2_pdbID == str(pdbID) :
-            bpy.context.view_layer.objects.active = o
-            bpy.context.view_layer.objects.active.hide_set(True)
-            o.select_set(False)
-            break
-        o.select_set(False)
-    bpy.ops.object.select_all(action="DESELECT")
-
     bpy.context.view_layer.objects.active = None
     bpy.data.objects['BioBlender_Camera'].select_set(True)
     bpy.data.objects['BioBlender_Camera'].location[1] = 70
@@ -953,8 +935,7 @@ def core_cleaningUp():
     print("pdbID: " + str(pdbID))
 
     sessionSave()
-    bpy.context.scene.BBImportPath = ""
-    bpy.context.scene.BBImportHydrogen = False
+
 
     global chainCount
     global importChainID
