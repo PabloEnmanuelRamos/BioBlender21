@@ -265,7 +265,7 @@ public:
         return true;
     }
     
-    void saveOBJ(char* filename)
+    void saveOBJ(const char* filename)
     {
         FILE* outpf;
         int vv,ff;
@@ -292,7 +292,7 @@ public:
         fclose(outpf);
     }    
     
-    void saveOBJ_norms(char* filename)
+    void saveOBJ_norms(const char* filename)
     {
         FILE* outpf;
         int vv,ff;
