@@ -35,6 +35,7 @@ from .BB2_PANEL_VIEW import *
 global SetKeyFrame
 SetKeyFrame = []
 
+
 def bootstrapping():
     print("Bootstrapping")
     # Gravity, rendering engine
@@ -51,7 +52,7 @@ def bootstrapping():
             bpy.data.materials[-1].name = "C"
             bpy.data.materials["C"].diffuse_color = color[C]
             bpy.data.materials["C"].node_tree.nodes["Principled BSDF"].inputs[0].default_value = color[C]
-        except Exception as E:
+        except Exception:
             bpy.ops.material.new.poll()
             bpy.data.materials[-1].name = "C"
             bpy.data.materials["C"].diffuse_color = color[C]
@@ -106,7 +107,7 @@ def create_fi_materials():
         for item in molecules_structure:
             for item_at in molecules_structure[item]:
                 value_fi_returned = parse_fi_values(item, item_at)
-                if not value_fi_returned in dic_lipo_materials:
+                if value_fi_returned not in dic_lipo_materials:
                     bpy.data.materials['C'].copy()
                     valuecolor = value_fi_returned
                     bpy.data.materials['C.001'].name = "matlipo_" + str(valuecolor)
@@ -196,7 +197,7 @@ def importPreview(verbose=False, retrieved=False):
     print("Import Preview")
     tmpPreviewFilePath = abspath(str(bpy.context.scene.BBImportPath))
     # get PDB straight from PDB.org
-    if (len(tmpPreviewFilePath) == 4) and not (retrieved):
+    if len(tmpPreviewFilePath) == 4 and not retrieved:
         retrievedFile = pdbdotorg(tmpPreviewFilePath)
         if retrievedFile:
             bpy.context.scene.BBImportFeedback = "Found matching Protein on PDB.org"
@@ -234,7 +235,8 @@ def importPreview(verbose=False, retrieved=False):
                         chainCount += 1
                         importChainID.append(currentChainID)
             # Special case for files containing 1 model with no opening model tag
-            if len(importFileModel) == 0: importFileModel.append(0)
+            if len(importFileModel) == 0:
+                importFileModel.append(0)
             # show list of models for importer to load
             bpy.context.scene.BBImportOrder = str(importFileModel)[1:-1]
             # if all okay, display feedback message
@@ -309,23 +311,35 @@ class PDBString(str):
     # The function tries to be smart by striping out whitespaces
     # and converts certain properties to list
     def get(self, property):
-        if property == "tag": return self[0:6].strip()
-        if property == "serial": return self[6:11].strip()
-        if property == "name": return self[12:16].strip()
-        if property == "altLoc": return self[16:17].strip()
-        if property == "aminoName": return self[17:20].strip()
-        if property == "chainID": return self[21:22].strip()
-        if property == "chainSeq": return self[22:26].strip()
-        if property == "iCode": return self[26:27].strip()
+        if property == "tag":
+            return self[0:6].strip()
+        if property == "serial":
+            return self[6:11].strip()
+        if property == "name":
+            return self[12:16].strip()
+        if property == "altLoc":
+            return self[16:17].strip()
+        if property == "aminoName":
+            return self[17:20].strip()
+        if property == "chainID":
+            return self[21:22].strip()
+        if property == "chainSeq":
+            return self[22:26].strip()
+        if property == "iCode":
+            return self[26:27].strip()
         if property == "loc":
             x = float(self[29:38])
             y = float(self[38:46])
             z = float(self[46:54])
             return [x, y, z]
-        if property == "tempFactor": return self[60:66].strip()
-        if property == "element": return self[76:78].strip()
-        if property == "charge": return self[78:80].strip()
-        if property == "modelID": return int(self[6:20].strip())
+        if property == "tempFactor":
+            return self[60:66].strip()
+        if property == "element":
+            return self[76:78].strip()
+        if property == "charge":
+            return self[78:80].strip()
+        if property == "modelID":
+            return int(self[6:20].strip())
         return None
 
     # insert data into a 80 column pdb string
@@ -407,7 +421,7 @@ def core_parsePDB(filePath):
             if tag == "MODEL":
                 tmpPDBmodelID = line.get("modelID")
             # if tag is ATOM, load column data (skip this if tmpPDBmodelID is not in list of models)
-            elif (tmpPDBmodelID in tmpPDBmodelImportOrder) and (tag == "ATOM" or tag == "HETATM") and chainID == chainPDB:
+            elif tmpPDBmodelID in tmpPDBmodelImportOrder and (tag == "ATOM" or tag == "HETATM") and chainID == chainPDB:
                 # check for element type
                 atomName = line.get("name")
                 elementName = line.get("element")
@@ -427,26 +441,30 @@ def core_parsePDB(filePath):
                 tmpPDBmodelDictionary[key] = line
                 # add mchain atom data to dictionary for building bonds
                 if atomName == N or atomName == C or (atomName == CA and elementName != CA):
-                    if key not in mainChainCache: mainChainCache.append(key)
+                    if key not in mainChainCache:
+                        mainChainCache.append(key)
                 if atomName in NucleicAtoms:
                     if atomName in NucleicAtoms_Filtered:
-                        if key not in mainChainCache_Nucleic_Filtered: mainChainCache_Nucleic_Filtered.append(key)
+                        if key not in mainChainCache_Nucleic_Filtered:
+                            mainChainCache_Nucleic_Filtered.append(key)
                     else:
-                        if key not in mainChainCache_Nucleic: mainChainCache_Nucleic.append(key)
-                    if atomName == "C3'": mainChainCache_Nucleic.append(key)
+                        if key not in mainChainCache_Nucleic:
+                            mainChainCache_Nucleic.append(key)
+                    if atomName == "C3'":
+                        mainChainCache_Nucleic.append(key)
                 # add all atom data to dictionary for building bonds
                 elementTypeNucleic = ["D", "A", "U", "G", "C", "DC", "DG", "DA", "DT"]
-                if elementName != H and (not elementTypeResidue in elementTypeNucleic) and atomtype == "ATOM":
+                if elementName != H and elementTypeResidue not in elementTypeNucleic and atomtype == "ATOM":
                     chainCache[key] = line.get("aminoName") + "#" + line.get("chainSeq") + "#" + line.get(
                         "name") + "#" + line.get("chainID") + "#" + line.get("element")
-                if elementName != H and (elementTypeResidue in elementTypeNucleic) and atomtype == "ATOM":
+                if elementName != H and elementTypeResidue in elementTypeNucleic and atomtype == "ATOM":
                     chainCache_Nucleic[key] = line.get("aminoName") + "#" + line.get("chainSeq") + "#" + line.get(
                         "name") + "#" + line.get("chainID") + "#" + line.get("element")
 
-            if (tag == "END" and (tmpPDBmodelID in tmpPDBmodelImportOrder)) and (tmpPDBmodelID == 0):
+            if (tag == "END" and (tmpPDBmodelID in tmpPDBmodelImportOrder)) and tmpPDBmodelID == 0:
                 (pdbIDmodelsDictionary[int(pdbID)])[tmpPDBmodelID] = tmpPDBmodelDictionary
                 tmpPDBmodelDictionary = {}
-            elif (tag == "ENDMDL" or tag == "MODEL") and (tmpPDBmodelID in tmpPDBmodelImportOrder):
+            elif (tag == "ENDMDL" or tag == "MODEL") and tmpPDBmodelID in tmpPDBmodelImportOrder:
                 (pdbIDmodelsDictionary[int(pdbID)])[tmpPDBmodelID] = tmpPDBmodelDictionary
                 tmpPDBmodelDictionary = {}
     mainChainCacheDict[int(pdbID)] = mainChainCache
@@ -541,7 +559,7 @@ def core_createModels():
     for m in tmpPDBmodelImportOrder:
         model = (pdbIDmodelsDictionary[int(pdbID)])[m]
         # Prova: se il dizionario-model in esame e' vuoto, saltalo (non e' stato selezionato il relativo model nella lista)
-        if not (model):
+        if not model:
             continue
         # =======
         # reset
@@ -657,7 +675,7 @@ def core_createModels():
                     chainSeq = line[1]
                     atom = line[2]
                     chainID = line[3]
-                    if not atom in NucleicAtoms:
+                    if atom not in NucleicAtoms:
                         # for side chain, look up parents based on rules
                         parent = bondLookUp_NucleicMain(atom=atom, amac=amac)
                         # generate name of parents
@@ -866,11 +884,14 @@ def bondLookUp_NucleicMain(atom, amac):  # define skeleton atoms
     return parent
 
 
-# I suppose that the object's referential was not change (the same as the scene, with x (red axis) to the right, z (blue axis) up and y (green axis) behing)
+# I suppose that the object's referential was not change (the same as the scene, with x (red axis) to the right,
+# z (blue axis) up and y (green axis) behing)
 def addRigidBodyRotamer(objectparent, objecttarget):
     # Add the rigid body joint for rotamer
-    # to define a rotamer, an hinge is use, with the axis vector which come from the atom parent to the target and with a position at the center of the parent atom
-    # This rotation transform the Ox axis of the parent, to the euler angle to orient the x axes (the hinge axis) of the pivot referential from this parent atom to the target
+    # to define a rotamer, an hinge is use, with the axis vector which come from the atom parent to the target and
+    # with a position at the center of the parent atom
+    # This rotation transform the Ox axis of the parent, to the euler angle to orient the x axes (the hinge axis) of
+    # the pivot referential from this parent atom to the target
     parentxaxis = Vector((1.0, 0.0, 0.0))
     hingevector = Vector((objecttarget.location[0] - objectparent.location[0],
                           objecttarget.location[1] - objectparent.location[1],
@@ -880,6 +901,7 @@ def addRigidBodyRotamer(objectparent, objecttarget):
     angle2mapx2hingevector = parentxaxis.angle(hingevector)
     matrot = Matrix.Rotation(angle2mapx2hingevector, 3, rotvec2mapx2hingevector)
     euler = matrot.to_euler()
+
 
 def core_EmptyPDBsCreation():
     for chain in str(bpy.context.scene.BBImportChainOrder).split(","):
@@ -892,6 +914,7 @@ def core_EmptyPDBsCreation():
         bpy.context.view_layer.objects.active.bb2_pdbPath = copy.copy(str(bpy.context.scene.BBImportPath))
         bpy.context.view_layer.objects.active.location = (0.0, 0.0, 0.0)
         bpy.context.view_layer.objects.active.hide_set(True)
+
 
 def core_EmptyChainsCreation():
     print("Empty Chains creation")
@@ -935,7 +958,6 @@ def core_cleaningUp():
     print("pdbID: " + str(pdbID))
 
     sessionSave()
-
 
     global chainCount
     global importChainID
