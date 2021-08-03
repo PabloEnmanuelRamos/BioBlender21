@@ -72,13 +72,34 @@ class bb2_OT_operator_ep(types.Operator):
             panel.todoAndviewpoints()
             if bpy.data.scenes["Scene"].frame_end < 280:
                 bpy.data.scenes["Scene"].frame_end = 280
-
         except Exception as E:
+
             s = "Generate EP Visualization Failed: " + str(E)
             print(s)
             return {'CANCELLED'}
         else:
             return {'FINISHED'}
+        finally:
+            # Destroy the surface
+            try:
+                if "SCENEWIDESURFACE.001" in bpy.data.objects.keys():
+                    bpy.ops.object.select_all(action="DESELECT")
+                    for o in bpy.data.objects:
+                        o.select_set(False)
+                    bpy.context.view_layer.objects.active = None
+                    bpy.data.objects['SCENEWIDESURFACE.001'].select_set(True)
+                    bpy.context.view_layer.objects.active = bpy.data.objects['SCENEWIDESURFACE.001']
+                    bpy.ops.object.delete(use_global=False)
+                if "SCENEWIDESURFACE" in bpy.data.objects.keys():
+                    bpy.ops.object.select_all(action="DESELECT")
+                    for o in bpy.data.objects:
+                        o.select_set(False)
+                    bpy.context.view_layer.objects.active = None
+                    bpy.data.objects['SCENEWIDESURFACE'].select_set(True)
+                    bpy.context.view_layer.objects.active = bpy.data.objects['SCENEWIDESURFACE']
+                    bpy.ops.object.delete(use_global=False)
+            except Exception as E:
+                print("Warning: SCENEWIDESURFACE removing not performed properly: " + str(E))
 
 
 bpy.utils.register_class(bb2_OT_operator_ep)
@@ -89,7 +110,7 @@ def cleanEPObjs(deletionList=None):
     global epOBJ
     bpy.ops.object.select_all(action="DESELECT")
     for o in bpy.data.objects:
-        if o.name == "Empty_Lines" and deletionList == None:
+        if o.name == "Empty_Lines" and deletionList is None:
             o.select_set(True)
         else:
             o.select_set(False)
@@ -111,7 +132,7 @@ def scenewideEP(animation):
     global epOBJ, method
     scene = bpy.context.scene
 
-    scenewideSetup()  # In BB1, it was a call to "Setup"; now, Setup is 'per id', so we need a scenewide setup function...
+    scenewideSetup()  # In BB1, it was a call to "Setup"; now, Setup is 'per id', so we need a scenewide setup function
 
     if not animation:
         print("Generating scenewide surface")
@@ -191,8 +212,8 @@ def scenewideEP(animation):
         print("Running APBS")
         try:
             if opSystem == "linux":
-                shutil.copy(panel.quotedPath(homePath + "bin" + os.sep + "apbs-1.2.1" + os.sep + "apbs"),
-                            panel.quotedPath(homePath + "tmp" + os.sep + "apbs"))
+                shutil.copy(panel.quotedPath(homePath + "bin" + os.sep + "apbs-1.2.1" + os.sep + "runAPBS.sh"),
+                            panel.quotedPath(homePath + "tmp" + os.sep + "runAPBS.sh"))
             elif opSystem == "darwin":
                 shutil.copy(panel.quotedPath(homePath + "bin" + os.sep + "apbs-1.2.1" + os.sep + "darwin_apbs"),
                             panel.quotedPath(homePath + "tmp" + os.sep + "darwin_apbs"))
@@ -203,18 +224,11 @@ def scenewideEP(animation):
             s = "APBS COPY failed: " + str(E)
             print(s)
         if opSystem == "linux":
-            oPath = homePath + "tmp" + os.sep + "scenewide.in"
-            f = open(oPath, "r")
-            lines = f.readlines()
-            f.close()
-            lines[1] = "    mol pqr " + panel.quotedPath(homePath + "tmp" + os.sep + "scenewide.pqr") + "\n"
-            f = open(oPath, "w")
-            f.writelines(lines)
-            f.close()
-            command = "chmod 755 %s" % (panel.quotedPath(homePath + "tmp" + os.sep + "apbs.exe"))
+            os.chdir(homePath + "tmp" + os.sep)
+            command = "chmod 755 %s" % (panel.quotedPath(homePath + "tmp" + os.sep + "runAPBS.sh"))
             command = panel.quotedPath(command)
             panel.launch(exeName=command)
-            command = homePath + "tmp" + os.sep + "apbs" + " " + homePath + "tmp" + os.sep + "scenewide.in"
+            command = homePath + "tmp" + os.sep + "runAPBS.sh"
         elif opSystem == "darwin":
             oPath = homePath + "tmp" + os.sep + "scenewide.in"
             f = open(oPath, "r")
@@ -262,7 +276,7 @@ def scenewideEP(animation):
         except Exception as E:
             s = "pot.dx output rewrite failed in tmp.in, will search in some folders...: " + str(E)
             print(s)
-        if envBoolean == False:
+        if not envBoolean:
             if opSystem == "linux":
                 print("user home: ", os.path.expanduser("~"))
                 try:
@@ -327,8 +341,7 @@ def scenewideEP(animation):
                 if not envBoolean:
                     print("Win problem; will search in AppData - Local - VirtualStore - Windows...")
                     try:
-                        envHome = str(os.environ[
-                                          'USERPROFILE']) + os.sep + "AppData" + os.sep + "Local" + os.sep + "VirtualStore" + os.sep + "Windows"
+                        envHome = str(os.environ['USERPROFILE']) + os.sep + "AppData" + os.sep + "Local" + os.sep + "VirtualStore" + os.sep + "Windows"
                         print("envHome: " + envHome)
                         shutil.move(envHome + os.sep + "pot.dx", homePath + "tmp" + os.sep + "pot.dx")
                         shutil.move(envHome + os.sep + "io.mc", homePath + "tmp" + os.sep + "io.mc")
@@ -349,14 +362,24 @@ def scenewideEP(animation):
 
         print("Running Scivis")
         if opSystem == "linux":
-            command = "chmod 755 %s" % (panel.quotedPath(homePath + "bin" + os.sep + "scivis" + os.sep + "SCIVIS"))
-            command = panel.quotedPath(command)
-            panel.launch(exeName=command)
-            command = "%s %s %s %s %f %f %f %f %f" % (
-                homePath + "bin" + os.sep + "scivis" + os.sep + "SCIVIS",
-                homePath + "tmp" + os.sep + "scenewide.obj",
-                homePath + "tmp" + os.sep + "pot.dx", homePath + "tmp" + os.sep + "tmp.txt",
-                bpy.context.scene.BBEPNumOfLine / 10, bpy.context.scene.BBEPMinPot, 45, 1, 3)
+            if platform.architecture()[0] is "64bit":
+                os.chdir(homePath + "bin" + os.sep + "scivis" + os.sep)
+                command = "chmod 755 %s" % (panel.quotedPath(homePath + "bin" + os.sep + "scivis" + os.sep + "SCIVISLINUX"))
+                command = panel.quotedPath(command)
+                panel.launch(exeName=command)
+                command = "%s %s %s %s %f %f %f %f %f" % (homePath + "bin" + os.sep + "scivis" + os.sep + "SCIVISLINUX", homePath + "tmp" + os.sep + "scenewide.obj", homePath + "tmp" + os.sep + "pot.dx", homePath + "tmp" + os.sep + "tmp.txt", bpy.context.scene.BBEPNumOfLine / 10, bpy.context.scene.BBEPMinPot, 45, 1, 3)
+            else:
+                os.chdir(homePath + "bin" + os.sep + "scivis" + os.sep)
+                command = "chmod 755 %s" % (
+                    panel.quotedPath(homePath + "bin" + os.sep + "scivis" + os.sep + "SCIVIS"))
+                command = panel.quotedPath(command)
+                panel.launch(exeName=command)
+                command = "%s %s %s %s %f %f %f %f %f" % (homePath + "bin" + os.sep + "scivis" + os.sep + "SCIVIS",
+                                                          homePath + "tmp" + os.sep + "scenewide.obj",
+                                                          homePath + "tmp" + os.sep + "pot.dx",
+                                                          homePath + "tmp" + os.sep + "tmp.txt",
+                                                          bpy.context.scene.BBEPNumOfLine / 10,
+                                                          bpy.context.scene.BBEPMinPot, 45, 1, 3)
         elif opSystem == "darwin":
             command = "chmod 755 %s" % (panel.quotedPath(homePath + "bin" + os.sep + "scivis" + os.sep + "darwin_SCIVIS"))
             command = panel.quotedPath(command)
@@ -379,7 +402,7 @@ def scenewideEP(animation):
         print("Importing data into Blender")
 
         if animation:
-            list = importEP(homePath + "tmp" + os.sep + "tmp.txt", animation = True)
+            list = importEP(homePath + "tmp" + os.sep + "tmp.txt", animation=True)
         else:
             list = importEP(homePath + "tmp" + os.sep + "tmp.txt", animation=False)
 
@@ -415,7 +438,7 @@ def scenewideEP(animation):
 
 
 # import curve description text into Blender
-def importEP(path,animation=False):
+def importEP(path, animation=False):
     global curveCount
     global objList
     lin = False
@@ -423,11 +446,11 @@ def importEP(path,animation=False):
         parentEmpty = "Empty_Lines"
         lin = True
 
-    if lin == False:
+    if not lin:
         bpy.ops.object.empty_add(type='PLAIN_AXES')
         bpy.context.view_layer.objects.active.name = "Empty_Lines"
         bpy.context.view_layer.objects.active.bb2_objectType = "CHAINEMPTY"
-        bpy.context.view_layer.objects.active.location = ((0.0, 0.0, 0.0))
+        bpy.context.view_layer.objects.active.location = (0.0, 0.0, 0.0)
         parentEmpty = bpy.context.view_layer.objects.active.name
 
     curveCount = 0
@@ -436,14 +459,13 @@ def importEP(path,animation=False):
     objList = []
     try:
         materialparticle = bpy.data.materials["Particle"]
-    except Exception as E:
+    except Exception:
         # read the file once to generate curves
         Directory = homePath + "data" + os.sep + "Particle.blend" + os.sep + "Material" + os.sep
         Path = os.sep + os.sep + "data" + os.sep + "Particle.blend" + os.sep + "Material" + os.sep + "Particle"
         objName = "Particle"
 
         append_file_to_current_blend(Path, objName, Directory)
-
 
     with open(path, "r") as file:
         for file_line in file:
@@ -532,10 +554,10 @@ def exportOBJ(path):
 
         # face data
         i = 0
-        while (i < len(vertexData)):
+        while i < len(vertexData):
             out = "f %d/%d %d/%d %d/%d\n" % (i + 1, i + 1, i + 2, i + 2, i + 3, i + 3)
             obj.write(out)
-            i = i + 3
+            i += 3
 
 
 def scenewideSetup():
@@ -576,7 +598,7 @@ def scenewideSetup():
                     line = line.set(38, y)
                     line = line.set(46, z)
                     outFile.write(line + "\n")
-                    i = i + 1
+                    i += 1
             except Exception as E:
                 str4 = str(E)
                 print("An error occured in sceneWideSetup: " + str4)
@@ -588,7 +610,6 @@ def scenewideSetup():
 def scenewideSurface():
     res = bpy.context.scene.BBMLPSolventRadius
     quality = "1"
-
 
     try:
         oPath = homePath + "tmp" + os.sep + "scenewide.pdb"
@@ -613,7 +634,6 @@ def scenewideSurface():
     tmpPathL = "load " + homePath + "tmp" + os.sep + "scenewide.pdb" + "\n"
     tmpPathS = "save " + homePath + "tmp" + os.sep + "scenewide.wrl" + "\n"
 
-
     with open(tmpPathO, mode="w") as f:
         f.write("# This file is automatically generated by BioBlender at runtime.\n")
         f.write("# Modifying it manually might not have an effect.\n")
@@ -629,9 +649,7 @@ def scenewideSurface():
         f.write("quit")
     print("Making Surface using PyMOL")
 
-
     command = "%s -c -u %s" % (panel.quotedPath(pyMolPath), panel.quotedPath(homePath + "tmp" + os.sep + "surface.pml"))
-
     command = panel.quotedPath(command)
     panel.launch(exeName=command)
 
@@ -656,10 +674,10 @@ def scenewideSurface():
                     ob.location = copy.copy(oE.location)
             except Exception as E:
                 print("An error occured while translating and rotating the surface")
-                print(str(Exception))
+                print(str(E))
     except Exception as E:
         print("An error occured after importing the WRL Shape_IndexedFaceSet in surface")
-        print(str(Exception))
+        print(str(E))
     panel.ClearLigth(0)
 
 
