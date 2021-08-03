@@ -27,23 +27,23 @@ from .BioBlender2 import *
 from .BB2_PANEL_VIEW import *
 from .BB2_MLP_PANEL import *
 from .BB2_EP_PANEL import *
-#from .BB2_PDB_OUTPUT_PANEL import *
+# from .BB2_PDB_OUTPUT_PANEL import *
 from .BB2_NMA_PANEL import *
 from .BB2_OUTPUT_PANEL import *
 
 
 # 2021-07-03
 bl_info = {
-    "name" : "BioBlender 2.1",
-    "author" : "SciVis, IFC-CNR",
-    "version" : (2, 1),
-    "blender" : (2, 93, 0),
-    "location" : "Properties > Scene",
-    "description" : "BioBlender 2.1",
-    "warning" : "",
-    "wiki_url" : "",
-    "tracker_url" : "http://www.scivis.it/community/main-forum/bioblender-for-blender-2-93/",
-    "category" : "Mesh"
+    "name": "BioBlender 2.1",
+    "author": "SciVis, IFC-CNR",
+    "version": (2, 1),
+    "blender": (2, 93, 0),
+    "location": "Properties > Scene",
+    "description": "BioBlender 2.1",
+    "warning": "",
+    "wiki_url": "",
+    "tracker_url": "http://www.scivis.it/community/main-forum/bioblender-for-blender-2-93/",
+    "category": "Mesh"
 }
 
 
@@ -74,7 +74,7 @@ class BB2_PT_GUI_PDB_IMPORT(bpy.types.Panel):
     bpy.types.Scene.BBImportChainOrder = bpy.props.StringProperty(attr="BBImportChainOrder", name="",
                                                                   description="List of chains to be imported",
                                                                   default="")
-    bpy.types.Scene.BBImportOrder = bpy.props.StringProperty(attr="BBImportOrder",
+    bpy.types.Scene.BBImportOrder = bpy.props.StringProperty(attr="BBImportOrder", name="",
                                                              description="List of models to be imported", default="")
     bpy.types.Scene.BBImportHydrogen = bpy.props.BoolProperty(attr="BBImportHydrogen", name="Import Hydrogen",
                                                               description="Import hydrogen atoms (Slower)",
@@ -173,13 +173,13 @@ class BB2_PT_PANEL_VIEW(bpy.types.Panel):
         r = layout.column(align=False)
         if bpy.context.view_layer.objects.active:
             if bpy.context.view_layer.objects.active.bb2_pdbPath:
-                r.label(text = "Currently Selected Model: " + str(bpy.context.view_layer.objects.active.name))
+                r.label(text="Currently Selected Model: " + str(bpy.context.view_layer.objects.active.name))
             elif bpy.context.view_layer.objects.active.BBInfo:
                 r.label(text="Currently Selected Model: " + str(bpy.context.view_layer.objects.active.name))
                 r.alignment = 'LEFT'
                 r.prop(bpy.context.view_layer.objects.active, "BBInfo", icon="MATERIAL", emboss=False)
             else:
-                r.label(text = "No model selected")
+                r.label(text="No model selected")
         split = layout.split()
         r = split.row()
         r.prop(scene, "BBViewFilter", expand=False)
@@ -209,7 +209,7 @@ class BB2_PT_PANEL_VIEW(bpy.types.Panel):
                     oldActiveObj = bpy.context.view_layer.objects.active.name
         except Exception as E:
             s = "Context Poll Failed: " + str(E)  # VEEEEEERY ANNOYING...
-        return (context)
+        return context
 
 
 # ===== CLASS GAME ==================================================================================================
@@ -269,10 +269,7 @@ class BB2_PT_MLP_PANEL(bpy.types.Panel):
                                                       description="Atomic or Surface MLP",
                                                       items=(("0", "Atomic", ""), ("1", "Surface", "")), default="0")
     bpy.types.Scene.BBMLPFormula = bpy.props.EnumProperty(attr="BBMLPFormula", name="Formula",
-                                                          description="Select a formula for MLP calculation", items=(
-            ("0", "Dubost", ""), ("1", "Testa", ""), ("2", "Fauchere", ""), ("3", "Brasseur", ""),
-            ("4", "Buckingham", "")),
-                                                          default="1")
+                                                          description="Select a formula for MLP calculation", items=(("0", "Dubost", ""), ("1", "Testa", ""), ("2", "Fauchere", ""), ("3", "Brasseur", ""), ("4", "Buckingham", "")), default="1")
     bpy.types.Scene.BBMLPGridSpacing = bpy.props.FloatProperty(attr="BBMLPGridSpacing", name="Grid Spacing",
                                                                description="MLP Calculation step size (Smaller is better, but slower)",
                                                                default=1, min=0.01, max=20, soft_min=1.4, soft_max=10)
@@ -296,7 +293,7 @@ class BB2_PT_MLP_PANEL(bpy.types.Panel):
         r.prop(scene, "BBAtomic", expand=True)
         r = layout.row()
         if bpy.context.scene.BBAtomic == "0":
-            r.label(text = "Calculate Atomic MLP")
+            r.label(text="Calculate Atomic MLP")
             r = layout.row()
             r.scale_y = 2
             r.operator("ops.bb2_operator_atomic_mlp")
@@ -308,12 +305,28 @@ class BB2_PT_MLP_PANEL(bpy.types.Panel):
             c.prop(scene, "BBMLPSolventRadius")
             r = split.row()
             r.scale_y = 2
-            r.operator("ops.bb2_operator_mlp")
+            if bpy.context.view_layer.objects.active is not None:
+                if bpy.context.view_layer.objects.active.bb2_pdbPath and bpy.context.view_layer.objects.active.bb2_objectType == "PDBEMPTY":
+                    r.operator("ops.bb2_operator_mlp")
+                else:
+                    r.active = False
+                    r.operator("ops.bb2_operator_mlp", icon="X")
+            else:
+                r.active = False
+                r.operator("ops.bb2_operator_mlp", icon="X")
             split = layout.split()
             r = split.column(align=True)
             r = split.column()
             r.scale_y = 2
-            r.operator("ops.bb2_operator_mlp_render")
+            if bpy.context.view_layer.objects.active is not None:
+                if bpy.context.view_layer.objects.active.bb2_objectType == 'SURFACE' and bpy.context.view_layer.objects.active.name[:3] == 'MLP':
+                    r.operator("ops.bb2_operator_mlp_render")
+                else:
+                    r.active = False
+                    r.operator("ops.bb2_operator_mlp_render", icon="X")
+            else:
+                r.active = False
+                r.operator("ops.bb2_operator_mlp_render", icon="X")
 
 
 # ===== CLASS  EP =====================================================================================================
@@ -359,7 +372,7 @@ class BB2_PT_EP_PANEL(bpy.types.Panel):
         c = split.column()
         c.prop(scene, "BBForceField")
         c = c.column(align=True)
-        c.label(text = "Options:")
+        c.label(text="Options:")
         c.prop(scene, "BBEPIonConc")
         c.prop(scene, "BBEPGridStep")
         c.prop(scene, "BBEPMinPot")
@@ -429,7 +442,7 @@ class BB2_PT_OUTPUT_PANEL(bpy.types.Panel):
         for ob in bpy.context.scene.objects:
             try:
                 if ob.bb2_objectType == "PDBEMPTY":
-                    r.label(text = str(ob.name))
+                    r.label(text=str(ob.name))
                     r = layout.row()
                     r.prop(ob, "bb2_outputOptions")
                     r = layout.row()
@@ -439,7 +452,7 @@ class BB2_PT_OUTPUT_PANEL(bpy.types.Panel):
         r = layout.row()
         r.prop(bpy.context.scene.render, "use_stamp", text="Information Overlay")
         r = layout.row()
-        r.prop(bpy.context.scene.render, "filepath", text = "")
+        r.prop(bpy.context.scene.render, "filepath", text="")
         r = layout.row()
         r.prop(bpy.context.scene, "frame_start")
         r = layout.row()
@@ -449,7 +462,7 @@ class BB2_PT_OUTPUT_PANEL(bpy.types.Panel):
         r = layout.row()
         stp = bpy.context.scene.BBExportStep
         num = ((bpy.context.scene.frame_end - bpy.context.scene.frame_start) / stp) + 1
-        r.label(text= "A total of %d frames will be exported." % (((bpy.context.scene.frame_end - bpy.context.scene.frame_start) / bpy.context.scene.BBExportStep) + 1))
+        r.label(text="A total of %d frames will be exported." % (((bpy.context.scene.frame_end - bpy.context.scene.frame_start) / bpy.context.scene.BBExportStep) + 1))
         r = layout.row()
         r.operator("ops.bb2_operator_anim")
 
@@ -494,7 +507,7 @@ class BB2_PT_NMA_PANEL(bpy.types.Panel):
         split = layout.split()
         c = split.column()
         c.prop(scene, "BBNormalModeAnalysis")
-        c.label(text = "Options:")
+        c.label(text="Options:")
         c.prop(scene, "BBNMANbModel")
         c.prop(scene, "BBNMARMSD")
         c.prop(scene, "BBNMACutoff")
@@ -512,7 +525,7 @@ classes = (
     # BB2_PT_PHYSICS_SIM_PANEL,
     BB2_PT_MLP_PANEL,
     BB2_PT_EP_PANEL,
-    #BB2_PT_PDB_OUTPUT_PANEL,
+    # BB2_PT_PDB_OUTPUT_PANEL,
     BB2_PT_OUTPUT_PANEL,
     BB2_PT_NMA_PANEL,
 )
