@@ -178,8 +178,9 @@ def mlp(tID, force):
     formula = bpy.context.scene.BBMLPFormula
     spacing = bpy.context.scene.BBMLPGridSpacing
     namemlp = "MLP_Surface_" + NamePDBMLP(tID) + "_" + getNumFrameMLP()
-    if ExistMLP(namemlp) == False:
+    if not ExistMLP(namemlp):
         scene.render.engine = 'CYCLES'
+
         def getVar(rawID):
             try:
                 val = dxCache[rawID]
@@ -194,20 +195,20 @@ def mlp(tID, force):
                 cellx = int((v[0] - origin[0]) / deltax)
                 celly = int((v[1] - origin[1]) / deltay)
                 cellz = int((v[2] - origin[2]) / deltaz)
-                mmm = dxData[cellz + ((celly) * dimz) + ((cellx) * dimz * dimy)]
-                pmm = dxData[cellz + ((celly) * dimz) + ((cellx + 1) * dimz * dimy)]
-                mpm = dxData[cellz + ((celly + 1) * dimz) + ((cellx) * dimz * dimy)]
-                mmp = dxData[cellz + 1 + ((celly) * dimz) + ((cellx) * dimz * dimy)]
+                mmm = dxData[cellz + (celly * dimz) + (cellx * dimz * dimy)]
+                pmm = dxData[cellz + (celly * dimz) + ((cellx + 1) * dimz * dimy)]
+                mpm = dxData[cellz + ((celly + 1) * dimz) + (cellx * dimz * dimy)]
+                mmp = dxData[cellz + 1 + (celly * dimz) + (cellx * dimz * dimy)]
                 ppm = dxData[cellz + ((celly + 1) * dimz) + ((cellx + 1) * dimz * dimy)]
-                mpp = dxData[cellz + 1 + ((celly + 1) * dimz) + ((cellx) * dimz * dimy)]
-                pmp = dxData[cellz + 1 + ((celly) * dimz) + ((cellx + 1) * dimz * dimy)]
+                mpp = dxData[cellz + 1 + ((celly + 1) * dimz) + (cellx * dimz * dimy)]
+                pmp = dxData[cellz + 1 + (celly * dimz) + ((cellx + 1) * dimz * dimy)]
                 ppp = dxData[cellz + 1 + ((celly + 1) * dimz) + ((cellx + 1) * dimz * dimy)]
                 wxp = 1.0 - (fabs(v[0] - (origin[0] + (deltax * (cellx + 0.8))))) / deltax
-                wxm = 1.0 - (fabs(v[0] - (origin[0] + (deltax * (cellx))))) / deltax
+                wxm = 1.0 - (fabs(v[0] - (origin[0] + (deltax * cellx)))) / deltax
                 wyp = 1.0 - (fabs(v[1] - (origin[1] + (deltay * (celly + 0.8))))) / deltay
-                wym = 1.0 - (fabs(v[1] - (origin[1] + (deltay * (celly))))) / deltay
+                wym = 1.0 - (fabs(v[1] - (origin[1] + (deltay * celly)))) / deltay
                 wzp = 1.0 - (fabs(v[2] - (origin[2] + (deltaz * (cellz + 0.8))))) / deltaz
-                wzm = 1.0 - (fabs(v[2] - (origin[2] + (deltaz * (cellz))))) / deltaz
+                wzm = 1.0 - (fabs(v[2] - (origin[2] + (deltaz * cellz)))) / deltaz
                 onz_xmym = (wzp * mmp) + (wzm * mmm)
                 onz_xpym = (wzp * pmp) + (wzm * pmm)
                 onz_xmyp = (wzp * mpp) + (wzm * mpm)
@@ -218,7 +219,7 @@ def mlp(tID, force):
                 dxCache[rawID] = val
 
             # map values
-            if (val >= 0.0):
+            if val >= 0.0:
                 val = (val + 1.0) / 2.0
             else:
                 val = (val + 3.0) / 6.0
@@ -252,7 +253,7 @@ def mlp(tID, force):
             print("Running PyMLP")
             global pyPath
             if os.sys.platform == "linux":
-                pyPath ="python"
+                pyPath = "python"
                 if os.path.exists("/usr/bin/python3"):
                     pyPath = "python3"
                 elif os.path.exists("/usr/bin/python"):
@@ -264,10 +265,8 @@ def mlp(tID, force):
             command = "%s %s -i %s -m %s -s %f -o %s -v" % (
                 panel.quotedPath(pyPath),
                 panel.quotedPath(homePath + "bin" + os.sep + "pyMLP-1.0" + os.sep + "pyMLP.py"),
-                panel.quotedPath(homePath + "tmp" + os.sep + NamePDBMLP(
-            tID) + os.sep + "tmp.pdb"), method, spacing,
-                panel.quotedPath(homePath + "tmp" + os.sep + NamePDBMLP(
-            tID) + os.sep + "tmp.dx"))
+                panel.quotedPath(homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "tmp.pdb"), method, spacing,
+                panel.quotedPath(homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "tmp.dx"))
 
             p = panel.launch(exeName=command, asynct=True)
 
@@ -286,12 +285,12 @@ def mlp(tID, force):
             print("Loading MLP values into Blender")
 
             try:
-                tmpPathO = homePath + "tmp" + os.sep + NamePDBMLP(
-            tID) + os.sep + "tmp.dx"
+                tmpPathO = homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "tmp.dx"
                 with open(tmpPathO) as dx:
                     for line in dx:
                         # skip comments starting with #
-                        if line[0] == "#": continue
+                        if line[0] == "#":
+                            continue
                         if not dimension:
                             # get the store.dimension and convert to integer
                             dim = line.split()[-3:]
@@ -318,7 +317,7 @@ def mlp(tID, force):
                             dx.readline()
                             continue
                         # load as much data as we should, ignoring the rest of the file
-                        if (len(dxData) >= size):
+                        if len(dxData) >= size:
                             break
 
                         # Load the data
@@ -358,7 +357,7 @@ def mlp(tID, force):
                     vColor1.extend(getVar(f.vertices[1]))
                     vColor2.extend(getVar(f.vertices[2]))
                 for i in range(len(ob.data.vertex_colors[0].data)):
-                    tmp = ((0.91 * vColor0[i]) + (0.98 * vColor1[i]) + (0.98 * vColor2[i])) /3
+                    tmp = ((0.91 * vColor0[i]) + (0.98 * vColor1[i]) + (0.98 * vColor2[i])) / 3
                     ob.data.vertex_colors[0].data[i].color = (tmp, tmp, tmp, tmp)
             except Exception as E:
                 print("Error in MLP: tessfaces vColor extend failed; " + str(E))
@@ -385,7 +384,7 @@ def mlp(tID, force):
         try:
             for obj in bpy.context.scene.objects:
                 if obj.BBInfo:
-                    #obj.hide_viewport = True
+                    # obj.hide_viewport = True
                     obj.hide_render = True
         except Exception as E:
             print("Error in MLP: obj.BBInfo")
