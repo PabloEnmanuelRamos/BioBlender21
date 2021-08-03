@@ -90,7 +90,7 @@ def updateView(residue=None, verbose=False):
         if s.BBInfo:
             if s.bb2_objectType == "SURFACE":
                 existingSurfaces.append(s.name)
-    if viewMode == "4" and Exist(idn.split(".")[0]) == False:
+    if viewMode == "4" and not Exist(idn.split(".")[0]):
         # If there are not surfaces in Scene...
         if not existingSurfaces:
             # generate surface if does not exist... a different Surface for EVERY pdbID selected...
@@ -210,13 +210,13 @@ def setup(verbose=False, clear=True, setupPDBid=0):
         shutil.copy(r"\\?\\" + PDBPath, r"\\?\\" + homePath + "tmp" + os.sep + NamePDB + os.sep + "original.pdb")
 
     print("Exporting PDB...")
-    exportPDB(path = homePath + "tmp" + os.sep + NamePDB + os.sep + "tmp.pdb", tag=bpy.data.objects[pE].name.split("#")[0], sPid=setupPDBid)
+    exportPDB(path=homePath + "tmp" + os.sep + NamePDB + os.sep + "tmp.pdb", tag=bpy.data.objects[pE].name.split("#")[0], sPid=setupPDBid)
 
     print("Setup is complete!")
 
 
 # export scene to PDB file; if no path is specified, it writes to tmp.pdb
-def exportPDB(path = homePath + "tmp" + os.sep + NamePDB + os.sep + "tmp.pdb", tag=None, verbose=False, sPid=None):
+def exportPDB(path=homePath + "tmp" + os.sep + NamePDB + os.sep + "tmp.pdb", tag=None, verbose=False, sPid=None):
     print("=============== exporting PDB")
     print("Exporting model '%s' to %s" % (tag, path))
 
@@ -225,7 +225,7 @@ def exportPDB(path = homePath + "tmp" + os.sep + NamePDB + os.sep + "tmp.pdb", t
     with open(outPath, "w") as outFile:
         for o in bpy.data.objects:
             try:
-                if ((o.bb2_pdbID == sPid) and (o.bb2_objectType == "ATOM")):
+                if o.bb2_pdbID == sPid and o.bb2_objectType == "ATOM":
                     loc = o.location
                     info = o.BBInfo
                     x = "%8.3f" % loc[0]
