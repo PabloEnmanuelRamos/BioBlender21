@@ -71,8 +71,7 @@ def bootstrapping():
     # get next PDB ID
     global pdbID
     pdbID = getNewPDBid()
-    # EmptySet (Hemi, BBCamera)
-
+    
     elementiDaImportare = ['Empty', 'Hemi']
     try:
         for objName in elementiDaImportare:
@@ -85,7 +84,7 @@ def bootstrapping():
     bpy.ops.object.select_all(action="DESELECT")
     for o in bpy.data.objects:
         o.select_set(False)
-        if o.name == 'Hemi':
+        if o.name == 'Hemi' or o.name == 'BioBlender_Camera':
             o.select_set(True)
     bpy.ops.object.delete()
 
@@ -942,17 +941,6 @@ def core_cleaningUp():
             bpy.ops.object.mode_set(mode='OBJECT')
             o.select_set(False)
             break
-
-    bpy.ops.object.select_all(action="DESELECT")
-    bpy.context.view_layer.objects.active = None
-    bpy.data.objects['BioBlender_Camera'].select_set(True)
-    bpy.data.objects['BioBlender_Camera'].location[1] = 70
-    bpy.data.objects['BioBlender_Camera'].rotation_euler[2] = 3.14159
-    bpy.context.view_layer.objects.active = bpy.data.objects['BioBlender_Camera']
-    bpy.context.scene.camera = bpy.data.objects["BioBlender_Camera"]
-    for area in bpy.context.screen.areas:
-        if area.type == 'VIEW_3D':
-            area.spaces[0].region_3d.view_perspective = "CAMERA"
 
     pdbID = pdbID + 1  # VERY IMPORTANT!!!
     print("pdbID: " + str(pdbID))
