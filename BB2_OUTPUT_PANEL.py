@@ -61,9 +61,12 @@ class bb2_OT_operator_anim(bpy.types.Operator):
 
     def invoke(self, context, event):
         try:
-            context.preferences.edit.use_global_undo = False
-            exportMovie()
-            context.preferences.edit.use_global_undo = True
+            if bpy.context.scene.camera is not None:
+                context.preferences.edit.use_global_undo = False
+                exportMovie()
+                context.preferences.edit.use_global_undo = True
+            else:
+                print("Error: Cannot render, no camera")
         except Exception as E:
             s = "Export Movie Failed: " + str(E)
             print(s)
