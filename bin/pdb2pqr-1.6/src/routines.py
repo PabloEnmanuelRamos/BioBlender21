@@ -1522,7 +1522,8 @@ class Routines:
         summary = 0
         while 1:
             line = pkafile.readline()
-            if line is "": break
+            if line == "":
+               break
             if line.startswith("SUMMARY"):
                 summary = 1
             elif line.startswith("-"):
