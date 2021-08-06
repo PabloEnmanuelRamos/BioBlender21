@@ -254,7 +254,11 @@ def mlp(tID, force):
             global pyPath
             if os.sys.platform == "linux":
                 pyPath = "python"
-                if os.path.exists("/usr/bin/python3"):
+                if os.path.exists("/usr/bin/python3.9"):
+                    pyPath = "python3.9"
+                elif os.path.exists("/usr/bin/python3.8"):
+                    pyPath = "python3.8"
+                elif os.path.exists("/usr/bin/python3"):
                     pyPath = "python3"
                 elif os.path.exists("/usr/bin/python"):
                     pyPath = "python"
@@ -262,12 +266,7 @@ def mlp(tID, force):
                     pyPath = "python2"
             if not pyPath:
                 pyPath = "python"
-            command = "%s %s -i %s -m %s -s %f -o %s -v" % (
-                panel.quotedPath(pyPath),
-                panel.quotedPath(homePath + "bin" + os.sep + "pyMLP-1.0" + os.sep + "pyMLP.py"),
-                panel.quotedPath(homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "tmp.pdb"), method, spacing,
-                panel.quotedPath(homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "tmp.dx"))
-
+            command = "%s %s -i %s -m %s -s %f -o %s -v" % (panel.quotedPath(pyPath), panel.quotedPath(homePath + "bin" + os.sep + "pyMLP-1.0" + os.sep + "pyMLP.py"), panel.quotedPath(homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "tmp.pdb"), method, spacing, panel.quotedPath(homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "tmp.dx"))
             p = panel.launch(exeName=command, asynct=True)
 
             print("PyMLP command succeded")
