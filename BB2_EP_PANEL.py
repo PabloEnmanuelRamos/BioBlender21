@@ -179,7 +179,7 @@ def scenewideEP(animation):
             os.chdir(panel.quotedPath(homePath + "bin" + os.sep + "pdb2pqr-1.6" + os.sep))
         else:
             os.chdir(r"\\?\\" + homePath + "bin" + os.sep + "pdb2pqr-1.6" + os.sep)
-        tmpPathPar1 = "python"
+        tmpPathPar1 = pyPath
         tmpPathPar2 = homePath + "bin" + os.sep + "pdb2pqr-1.6" + os.sep + "pdb2pqr.py"
         tmpPathPar3 = homePath + "tmp" + os.sep + "scenewide.pqr"
         tmpPathPar4 = homePath + "tmp" + os.sep + "scenewide.pdb"
@@ -194,7 +194,7 @@ def scenewideEP(animation):
         panel.launch(exeName=command)
 
         print("Running inputgen.py")
-        tmp1PathPar1 = "python"
+        tmp1PathPar1 = pyPath
         tmp1PathPar2 = homePath + "bin" + os.sep + "pdb2pqr-1.6" + os.sep + "src" + os.sep + "inputgen.py"
         tmp1PathPar3 = homePath + "tmp" + os.sep + "scenewide.pqr"
         if opSystem == "linux":
@@ -362,7 +362,7 @@ def scenewideEP(animation):
 
         print("Running Scivis")
         if opSystem == "linux":
-            if platform.architecture()[0] is "64bit":
+            if platform.architecture()[0] == "64bit":
                 os.chdir(homePath + "bin" + os.sep + "scivis" + os.sep)
                 command = "chmod 755 %s" % (panel.quotedPath(homePath + "bin" + os.sep + "scivis" + os.sep + "SCIVISLINUX"))
                 command = panel.quotedPath(command)
