@@ -464,7 +464,11 @@ class BB2_PT_OUTPUT_PANEL(bpy.types.Panel):
         num = ((bpy.context.scene.frame_end - bpy.context.scene.frame_start) / stp) + 1
         r.label(text="A total of %d frames will be exported." % (((bpy.context.scene.frame_end - bpy.context.scene.frame_start) / bpy.context.scene.BBExportStep) + 1))
         r = layout.row()
-        r.operator("ops.bb2_operator_anim")
+        if bpy.context.scene.camera is not None:
+            r.operator("ops.bb2_operator_anim")
+        else:
+            r.active = False
+            r.operator("ops.bb2_operator_anim", text='Export Movie (No Camera)', icon='X')
 
 
 # ===== CLASS NMA ====================================================================================================
