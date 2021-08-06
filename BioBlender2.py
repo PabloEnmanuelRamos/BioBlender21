@@ -94,7 +94,13 @@ if (opSystem == "linux") or (opSystem == "darwin"):
 # Python Path
 if (opSystem == "linux") or (opSystem == "darwin"):
     pyPath = "python"
-    if os.path.exists("/usr/bin/python3"):
+    if os.path.exists("/usr/bin/python3.9"):
+        pyPath = "python3.9"
+    elif os.path.exists("/usr/bin/python3.8"):
+        pyPath = "python3.8"
+    elif os.path.exists("/usr/bin/python3.7"):
+        pyPath = "python3.7"
+    elif os.path.exists("/usr/bin/python3"):
         pyPath = "python3"
     elif os.path.exists("/usr/bin/python"):
         pyPath = "python"
@@ -103,15 +109,18 @@ if (opSystem == "linux") or (opSystem == "darwin"):
 else:
     pyPath = ""
     pyPathSearch = [
+        "%systemdrive%\\Python39\\python.exe",
+        "%systemdrive%\\Python38\\python.exe",
         "%systemdrive%\\Python37\\python.exe",
-        "%systemdrive%\\Python37\\python.exe",
-        "%systemdrive%\\Python37\\python.exe",
+        "%systemdrive%\\Python35\\python.exe",
         "/usr/bin/python"
     ]
 
 # Detecting PyMol path
 pyMolPath = ""
 pyMolPathSearch = [
+    "%systemdrive%\\Python39\\Scripts\\pymol.cmd",
+    "%systemdrive%\\Python38\\Scripts\\pymol.cmd",
     "%systemdrive%\\Python37\\Scripts\\pymol.cmd",
     "%programfiles%\\PyMOL\\PyMOL\\PymolWin.exe",
     "%programfiles%\\DeLano Scientific\\PyMOL Eval\\PymolWin.exe",
