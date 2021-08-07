@@ -283,11 +283,11 @@ def scenewideEP(animation):
                     print("BB stays here: ")
                     homeutente = os.path.expanduser("~")
                     shutil.move(panel.quotedPath(
-                        homeutente + "/.config/blender/2.93/scripts/addons/BioBlender-master/bin/pdb2pqr-1.6/pot.dx"),
-                        panel.quotedPath(homeutente + "/.config/blender/2.93/scripts/addons/BioBlender-master/tmp/pot.dx"))
+                        homeutente + "/.config/blender/" + str(bpy.data.version[0]) + "." + str(bpy.data.version[1]) + "/scripts/addons/BioBlender-master/bin/pdb2pqr-1.6/pot.dx"),
+                        panel.quotedPath(homeutente + "/.config/blender/" + str(bpy.data.version[0]) + "." + str(bpy.data.version[1]) + "/scripts/addons/BioBlender-master/tmp/pot.dx"))
                     shutil.move(panel.quotedPath(
-                        homeutente + "/.config/blender/2.93/scripts/addons/BioBlender-master/bin/pdb2pqr-1.6/io.mc"),
-                        panel.quotedPath(homeutente + "/.config/blender/2.93/scripts/addons/BioBlender-master/tmp/io.mc"))
+                        homeutente + "/.config/blender/" + str(bpy.data.version[0]) + "." + str(bpy.data.version[1]) + "/scripts/addons/BioBlender-master/bin/pdb2pqr-1.6/io.mc"),
+                        panel.quotedPath(homeutente + "/.config/blender/" + str(bpy.data.version[0]) + "." + str(bpy.data.version[1]) + "/scripts/addons/BioBlender-master/tmp/io.mc"))
                 except Exception as E:
                     s = "pot.dx not found in HOME: " + str(E)
                     print(s)
@@ -297,11 +297,11 @@ def scenewideEP(animation):
                     print("BB stays here: ")
                     homeutente = os.path.expanduser("~")
                     shutil.move(panel.quotedPath(
-                        homeutente + "/.config/blender/2.93/scripts/addons/BioBlender-master/bin/pdb2pqr-1.6/pot.dx"),
-                        panel.quotedPath(homeutente + "/.config/blender/2.93/scripts/addons/BioBlender-master/tmp/pot.dx"))
+                        homeutente + "/.config/blender/" + str(bpy.data.version[0]) + "." + str(bpy.data.version[1]) + "/scripts/addons/BioBlender-master/bin/pdb2pqr-1.6/pot.dx"),
+                        panel.quotedPath(homeutente + "/.config/blender/" + str(bpy.data.version[0]) + "." + str(bpy.data.version[1]) + "/scripts/addons/BioBlender-master/tmp/pot.dx"))
                     shutil.move(panel.quotedPath(
-                        homeutente + "/.config/blender/2.93/scripts/addons/BioBlender-master/bin/pdb2pqr-1.6/io.mc"),
-                        panel.quotedPath(homeutente + "/.config/blender/2.93/scripts/addons/BioBlender-master/tmp/io.mc"))
+                        homeutente + "/.config/blender/" + str(bpy.data.version[0]) + "." + str(bpy.data.version[1]) + "/scripts/addons/BioBlender-master/bin/pdb2pqr-1.6/io.mc"),
+                        panel.quotedPath(homeutente + "/.config/blender/" + str(bpy.data.version[0]) + "." + str(bpy.data.version[1]) + "/scripts/addons/BioBlender-master/tmp/io.mc"))
                 except Exception as E:
                     s = "pot.dx not found in HOME: " + str(E)
                     print(s)
