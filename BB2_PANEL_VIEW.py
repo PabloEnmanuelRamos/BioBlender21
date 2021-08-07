@@ -366,6 +366,8 @@ def select(obj):
         ob.select_set(True)
         bpy.context.view_layer.objects.active = ob
     except Exception as E:
+        if obj == "Emitter":
+            return None
         print("Error Select obj " + str(E))
         return None
     else:
