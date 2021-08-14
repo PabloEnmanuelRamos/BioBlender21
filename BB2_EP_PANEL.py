@@ -264,7 +264,16 @@ def scenewideEP(animation):
         envBoolean = False
         try:
             if opSystem == "linux":
-                tmpP = panel.quotedPath(homePath + "tmp" + os.sep + "pot.dx")
+                dir = homePath + "tmp" + os.sep
+                ext = ".dx"
+                listDx = []
+                listDx = [x for x in os.listdir(dir) if x.endswith(ext)]
+                tmpP = ""
+                for f in listDx:
+                    if f == "pot.dx":
+                        tmpP = panel.quotedPath(homePath + "tmp" + os.sep + "pot.dx")
+                    elif f[0:3] == "pot":
+                        tmpP = panel.quotedPath(homePath + "tmp" + os.sep + f)
                 if os.path.isfile(tmpP):
                     envBoolean = True
                     print("pot.dx in current directory; won't search in HOME or VIRTUALSTORE folders...")
@@ -282,12 +291,17 @@ def scenewideEP(animation):
                 try:
                     print("BB stays here: ")
                     homeutente = os.path.expanduser("~")
-                    shutil.move(panel.quotedPath(
-                        homeutente + "/.config/blender/" + str(bpy.data.version[0]) + "." + str(bpy.data.version[1]) + "/scripts/addons/BioBlender-master/bin/pdb2pqr-1.6/pot.dx"),
-                        panel.quotedPath(homeutente + "/.config/blender/" + str(bpy.data.version[0]) + "." + str(bpy.data.version[1]) + "/scripts/addons/BioBlender-master/tmp/pot.dx"))
-                    shutil.move(panel.quotedPath(
-                        homeutente + "/.config/blender/" + str(bpy.data.version[0]) + "." + str(bpy.data.version[1]) + "/scripts/addons/BioBlender-master/bin/pdb2pqr-1.6/io.mc"),
-                        panel.quotedPath(homeutente + "/.config/blender/" + str(bpy.data.version[0]) + "." + str(bpy.data.version[1]) + "/scripts/addons/BioBlender-master/tmp/io.mc"))
+                    dir = homeutente + "/.config/blender/" + str(bpy.data.version[0]) + "." + str(bpy.data.version[1]) + "/scripts/addons/BioBlender-master/bin/pdb2pqr-1.6/"
+                    ext = ".dx"
+                    listDx = []
+                    listDx = [x for x in os.listdir(dir) if x.endswith(ext)]
+                    for f in listDx:
+                        if f == "pot.dx":
+                            shutil.move(panel.quotedPath(homeutente + "/.config/blender/" + str(bpy.data.version[0]) + "." + str(bpy.data.version[1]) + "/scripts/addons/BioBlender-master/bin/pdb2pqr-1.6/pot.dx"), panel.quotedPath(homeutente + "/.config/blender/" + str(bpy.data.version[0]) + "." + str(bpy.data.version[1]) + "/scripts/addons/BioBlender-master/tmp/pot.dx"))
+                            shutil.move(panel.quotedPath(homeutente + "/.config/blender/" + str(bpy.data.version[0]) + "." + str(bpy.data.version[1]) + "/scripts/addons/BioBlender-master/bin/pdb2pqr-1.6/io.mc"), panel.quotedPath(homeutente + "/.config/blender/" + str(bpy.data.version[0]) + "." + str(bpy.data.version[1]) + "/scripts/addons/BioBlender-master/tmp/io.mc"))
+                        elif f[0:3] == "pot":
+                            shutil.move(panel.quotedPath(homeutente + "/.config/blender/" + str(bpy.data.version[0]) + "." + str(bpy.data.version[1]) + "/scripts/addons/BioBlender-master/bin/pdb2pqr-1.6/pot.dx"), panel.quotedPath(homeutente + "/.config/blender/" + str(bpy.data.version[0]) + "." + str(bpy.data.version[1]) + "/scripts/addons/BioBlender-master/tmp/" + f))
+                            shutil.move(panel.quotedPath(homeutente + "/.config/blender/" + str(bpy.data.version[0]) + "." + str(bpy.data.version[1]) + "/scripts/addons/BioBlender-master/bin/pdb2pqr-1.6/io.mc"), panel.quotedPath(homeutente + "/.config/blender/" + str(bpy.data.version[0]) + "." + str(bpy.data.version[1]) + "/scripts/addons/BioBlender-master/tmp/io.mc"))
                 except Exception as E:
                     s = "pot.dx not found in HOME: " + str(E)
                     print(s)
