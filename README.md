@@ -23,7 +23,7 @@ The SciVis Team is grateful to all that will contribute to this project.
 # Getting Started #
 **BioBlender is still under development**
 
-## Prerequisites ##
+## Minimum Prerequisites ##
 - [Blender 2.92](http://www.blender.org/)
 - [Python 3.7.7](https://www.python.org/downloads/)
 - [PyMol](http://sourceforge.net/projects/pymol/?source=directory)
