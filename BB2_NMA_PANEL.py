@@ -70,12 +70,24 @@ def computeNormalModeTrajectories():
 
         file = open(outputpath, 'w+')
         file.close()
-        pyPath = "python"
+        global pyPath
         if opSystem == "linux":
+            pyPath = "python"
+            if os.path.exists("/usr/bin/python3.9"):
+                pyPath = "python3.9"
+            elif os.path.exists("/usr/bin/python3.8"):
+                pyPath = "python3.8"
+            elif os.path.exists("/usr/bin/python3"):
+                pyPath = "python3"
+            elif os.path.exists("/usr/bin/python"):
+                pyPath = "python"
+            elif os.path.exists("/usr/bin/python2"):
+                pyPath = "python2"
             command = "chmod 755 %s" % (panel.quotedPath(homePath + "bin" + os.sep + "nma" + os.sep + "nma.py"))
             command = panel.quotedPath(command)
             p = panel.launch(exeName=command, asynct=False)
         elif opSystem == "darwin":
+            pyPath = "python"
             command = "chmod 755 %s" % (panel.quotedPath(homePath + "bin" + os.sep + "nma" + os.sep + "nma.py"))
             command = panel.quotedPath(command)
             p = panel.launch(exeName=command, asynct=False)
