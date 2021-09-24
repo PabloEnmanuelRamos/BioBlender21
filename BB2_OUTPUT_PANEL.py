@@ -87,10 +87,10 @@ def exportMovie():
     a = time.time()
 
     pdbPath = os.path.normpath(abspath(bpy.context.scene.render.filepath))
-    if opSystem == "linux":
+    if str(os.environ["opSystem"]) == "linux":
         if not os.path.isdir(pdbPath):
             os.mkdir(abspath(pdbPath))
-    elif opSystem == "darwin":
+    elif str(os.environ["opSystem"]) == "darwin":
         if not os.path.isdir(pdbPath):
             os.mkdir(abspath(pdbPath))
     else:
