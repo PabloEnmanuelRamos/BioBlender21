@@ -73,7 +73,6 @@ class bb2_OT_operator_ep(types.Operator):
             if bpy.data.scenes["Scene"].frame_end < 280:
                 bpy.data.scenes["Scene"].frame_end = 280
         except Exception as E:
-
             s = "Generate EP Visualization Failed: " + str(E)
             print(s)
             return {'CANCELLED'}
@@ -140,7 +139,7 @@ def scenewideEP(animation):
 
     if (not animation) or (bpy.context.scene.frame_current % 5 == 1):
         print("Generating EP Curves")
-        tmpPathOpen = str(os.environ["BBHome"]) + "tmp" + os.sep + "scenewide.pdb"  # former tmp.pdb
+        tmpPathOpen = str(os.environ["BBHome_TEMP"]) + "scenewide.pdb"  # former tmp.pdb
         scenewideSurface()
 
         with open(tmpPathOpen, "r") as file:
@@ -182,7 +181,7 @@ def scenewideEP(animation):
         tmpPathPar1 = str(os.environ["pyPath"])
         tmpPathPar2 = str(os.environ["BBHome_BIN_PDBPQR"]) + "pdb2pqr.py"
         tmpPathPar3 = str(os.environ["BBHome_TEMP"]) + "scenewide.pqr"
-        tmpPathPar4 = str(os.environ["BBHome"]) + "tmp" + os.sep + "scenewide.pdb"
+        tmpPathPar4 = str(os.environ["BBHome_TEMP"]) + "scenewide.pdb"
         if str(os.environ["opSystem"]) == "linux":
             command = "%s %s --apbs-input --ff=%s %s %s" % (tmpPathPar1, tmpPathPar2, method, tmpPathPar4, tmpPathPar3)
         elif str(os.environ["opSystem"]) == "darwin":
@@ -224,35 +223,35 @@ def scenewideEP(animation):
             s = "APBS COPY failed: " + str(E)
             print(s)
         if str(os.environ["opSystem"]) == "linux":
-            os.chdir(str(os.environ["BBHome"]) + "tmp" + os.sep)
-            command = "chmod 755 %s" % (panel.quotedPath(str(os.environ["BBHome"]) + "tmp" + os.sep + "runAPBS.sh"))
+            os.chdir(str(os.environ["BBHome_TEMP"]))
+            command = "chmod 755 %s" % (panel.quotedPath(str(os.environ["BBHome_TEMP"]) + "runAPBS.sh"))
             command = panel.quotedPath(command)
             panel.launch(exeName=command)
-            command = str(os.environ["BBHome"]) + "tmp" + os.sep + "runAPBS.sh"
+            command = str(os.environ["BBHome_TEMP"]) + "runAPBS.sh"
         elif str(os.environ["opSystem"]) == "darwin":
-            oPath = str(os.environ["BBHome"])+ "tmp" + os.sep + "scenewide.in"
+            oPath = str(os.environ["BBHome_TEMP"]) + "scenewide.in"
             f = open(oPath, "r")
             lines = f.readlines()
             f.close()
-            lines[1] = "    mol pqr " + panel.quotedPath(str(os.environ["BBHome"]) + "tmp" + os.sep + "scenewide.pqr") + "\n"
+            lines[1] = "    mol pqr " + panel.quotedPath(str(os.environ["BBHome_TEMP"]) + "scenewide.pqr") + "\n"
             f = open(oPath, "w")
             f.writelines(lines)
             f.close()
-            command = "chmod 755 %s" % (panel.quotedPath(str(os.environ["BBHome"]) + "tmp" + os.sep + "darwin_apbs"))
+            command = "chmod 755 %s" % (panel.quotedPath(str(os.environ["BBHome_TEMP"]) + "darwin_apbs"))
             command = panel.quotedPath(command)
             panel.launch(exeName=command)
-            command = str(os.environ["BBHome"]) + "tmp" + os.sep + "darwin_apbs" + " " + str(os.environ["BBHome"]) + "tmp" + os.sep + "scenewide.in"
+            command = str(os.environ["BBHome_TEMP"]) + "darwin_apbs" + " " + str(os.environ["BBHome_TEMP"]) + "scenewide.in"
         else:
-            oPath = str(os.environ["BBHome"])+ "tmp" + os.sep + "scenewide.in"
+            oPath = str(os.environ["BBHome_TEMP"]) + "scenewide.in"
             f = open(oPath, "r")
             lines = f.readlines()
             f.close()
-            lines[1] = "    mol pqr " + panel.quotedPath(str(os.environ["BBHome"]) + "tmp" + os.sep + "scenewide.pqr") + "\n"
+            lines[1] = "    mol pqr " + panel.quotedPath(str(os.environ["BBHome_TEMP"]) + "scenewide.pqr") + "\n"
             f = open(oPath, "w")
             f.writelines(lines)
             f.close()
-            command = panel.quotedPath(str(os.environ["BBHome"])+ "tmp" + os.sep + "apbs.exe") + " " + panel.quotedPath(
-                str(os.environ["BBHome"]) + "tmp" + os.sep + "scenewide.in")
+            command = panel.quotedPath(str(os.environ["BBHome_TEMP"]) + "apbs.exe") + " " + panel.quotedPath(
+                str(os.environ["BBHome_TEMP"]) + "scenewide.in")
         p = panel.launch(exeName=command, asynct=True)
         print("APBS Ok")
 
@@ -271,14 +270,14 @@ def scenewideEP(animation):
                 tmpP = ""
                 for f in listDx:
                     if f == "pot.dx":
-                        tmpP = panel.quotedPath(str(os.environ["BBHome"]) + "tmp" + os.sep + "pot.dx")
+                        tmpP = panel.quotedPath(str(os.environ["BBHome_TEMP"]) + "pot.dx")
                     elif f[0:3] == "pot":
-                        tmpP = panel.quotedPath(str(os.environ["BBHome"]) + "tmp" + os.sep + f)
+                        tmpP = panel.quotedPath(str(os.environ["BBHome_TEMP"]) + f)
                 if os.path.isfile(tmpP):
                     envBoolean = True
                     print("pot.dx in current directory; won't search in HOME or VIRTUALSTORE folders...")
             elif str(os.environ["opSystem"]) == "darwin":
-                tmpP = panel.quotedPath(str(os.environ["BBHome"]) + "tmp" + os.sep + "pot.dx")
+                tmpP = panel.quotedPath(str(os.environ["BBHome_TEMP"]) + "pot.dx")
                 if os.path.isfile(tmpP):
                     envBoolean = True
                     print("pot.dx in current directory; won't search in HOME or VIRTUALSTORE folders...")
@@ -317,8 +316,8 @@ def scenewideEP(animation):
                 try:
                     envHome = str(os.environ['USERPROFILE'])
                     print("envHome: " + envHome)
-                    shutil.move(r"\\?\\" + envHome + os.sep + "pot.dx", r"\\?\\" + str(os.environ["BBHome"]) + "tmp" + os.sep + "pot.dx")
-                    shutil.move(r"\\?\\" + envHome + os.sep + "io.mc", r"\\?\\" + str(os.environ["BBHome"])+ "tmp" + os.sep + "io.mc")
+                    shutil.move(r"\\?\\" + envHome + os.sep + "pot.dx", r"\\?\\" + str(os.environ["BBHome_TEMP"]) + "pot.dx")
+                    shutil.move(r"\\?\\" + envHome + os.sep + "io.mc", r"\\?\\" + str(os.environ["BBHom_TEMP"]) + "io.mc")
                     envBoolean = True
                 except Exception as E:
                     s = "No pot.dx in HOME: " + str(E)
@@ -328,8 +327,8 @@ def scenewideEP(animation):
                     try:
                         envHome = "C:" + os.sep + "Windows"
                         print("envHome: " + envHome)
-                        shutil.move(envHome + os.sep + "pot.dx", str(os.environ["BBHome"]) + "tmp" + os.sep + "pot.dx")
-                        shutil.move(envHome + os.sep + "io.mc", str(os.environ["BBHome"]) + "tmp" + os.sep + "io.mc")
+                        shutil.move(envHome + os.sep + "pot.dx", str(os.environ["BBHome_TEMP"]) + "pot.dx")
+                        shutil.move(envHome + os.sep + "io.mc", str(os.environ["BBHome_TEMP"]) + "io.mc")
                         envBoolean = True
                     except Exception as E:
                         s = "Windows home failed too; no pot.dx, sorry: " + str(E)
@@ -340,8 +339,8 @@ def scenewideEP(animation):
                         envHome = str(
                             os.environ['USERPROFILE']) + os.sep + "AppData" + os.sep + "Local" + os.sep + "VirtualStore"
                         print("envHome: " + envHome)
-                        shutil.move(envHome + os.sep + "pot.dx", str(os.environ["BBHome"])+ "tmp" + os.sep + "pot.dx")
-                        shutil.move(envHome + os.sep + "io.mc", str(os.environ["BBHome"]) + "tmp" + os.sep + "io.mc")
+                        shutil.move(envHome + os.sep + "pot.dx", str(os.environ["BBHome_TEMP"]) + "pot.dx")
+                        shutil.move(envHome + os.sep + "io.mc", str(os.environ["BBHome_TEMP"]) + "io.mc")
                         envBoolean = True
                     except Exception as E:
                         s = "VirtualStore failed too; no pot.dx, sorry: " + str(E)
@@ -351,15 +350,15 @@ def scenewideEP(animation):
                     try:
                         envHome = str(os.environ['USERPROFILE']) + os.sep + "AppData" + os.sep + "Local" + os.sep + "VirtualStore" + os.sep + "Windows"
                         print("envHome: " + envHome)
-                        shutil.move(envHome + os.sep + "pot.dx", str(os.environ["BBHome"]) + "tmp" + os.sep + "pot.dx")
-                        shutil.move(envHome + os.sep + "io.mc", str(os.environ["BBHome"]) + "tmp" + os.sep + "io.mc")
+                        shutil.move(envHome + os.sep + "pot.dx", str(os.environ["BBHome_TEMP"]) + "pot.dx")
+                        shutil.move(envHome + os.sep + "io.mc", str(os.environ["BBHome_TEMP"]) + "io.mc")
                         envBoolean = True
                     except Exception as E:
                         s = "VirtualStore - Windows failed too; no pot.dx, sorry: " + str(E)
                         print(s)
                         print("=========== SORRY: CANNOT FIND POT.DX ============")
         print("Saving obj")
-        exportOBJ(str(os.environ["BBHome"])+ "tmp" + os.sep + "scenewide")
+        exportOBJ(str(os.environ["BBHome_TEMP"]) + "scenewide")
 
         if len(epOBJ) >= maxCurveSet:
             # delete the oldest curve-sets out of the list.
