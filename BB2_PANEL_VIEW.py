@@ -181,42 +181,42 @@ def setup(verbose=False, clear=True, setupPDBid=0):
     print("pdppath: " + str(PDBPath))
 
     if clear:
-        if opSystem == "linux":
-            if os.path.isdir(quotedPath(homePath + "tmp" + os.sep + NamePDB + os.sep)):
-                shutil.rmtree(quotedPath(homePath + "tmp" + os.sep + NamePDB + os.sep))
-                os.mkdir(quotedPath(homePath + "tmp" + os.sep + NamePDB + os.sep))
+        if str(os.environ["opSystem"]) == "linux":
+            if os.path.isdir(quotedPath(str(os.environ["BBHome_TEMP"]) + NamePDB + os.sep)):
+                shutil.rmtree(quotedPath(str(os.environ["BBHome_TEMP"]) + NamePDB + os.sep))
+                os.mkdir(quotedPath(str(os.environ["BBHome_TEMP"]) + NamePDB + os.sep))
             else:
-                os.mkdir(quotedPath(homePath + "tmp" + os.sep + NamePDB + os.sep))
-        elif opSystem == "darwin":
-            if os.path.isdir(quotedPath(homePath + "tmp" + os.sep + NamePDB + os.sep)):
-                shutil.rmtree(quotedPath(homePath + "tmp" + os.sep + NamePDB + os.sep))
-                os.mkdir(quotedPath(homePath + "tmp" + os.sep + NamePDB + os.sep))
+                os.mkdir(quotedPath(str(os.environ["BBHome_TEMP"]) + NamePDB + os.sep))
+        elif str(os.environ["opSystem"]) == "darwin":
+            if os.path.isdir(quotedPath(str(os.environ["BBHome_TEMP"]) + NamePDB + os.sep)):
+                shutil.rmtree(quotedPath(str(os.environ["BBHome_TEMP"]) + NamePDB + os.sep))
+                os.mkdir(quotedPath(str(os.environ["BBHome_TEMP"]) + NamePDB + os.sep))
             else:
-                os.mkdir(quotedPath(homePath + "tmp" + os.sep + NamePDB + os.sep))
+                os.mkdir(quotedPath(str(os.environ["BBHome_TEMP"]) + NamePDB + os.sep))
         else:
-            if os.path.isdir(r"\\?\\" + homePath + "tmp" + os.sep + NamePDB + os.sep):
+            if os.path.isdir(r"\\?\\" + str(os.environ["BBHome_TEMP"]) + NamePDB + os.sep):
                 print("There is a TMP folder!")
             else:
-                # os.mkdir(r"\\?\\" + homePath+"tmp" + os.sep)
+                # os.mkdir(r"\\?\\" + str(os.environ["BBHome_TEMP"]))
                 print("Trying to making dir on Win (no TMP folder)...")
-                os.mkdir(r"\\?\\" + homePath + "tmp" + os.sep + NamePDB)
+                os.mkdir(r"\\?\\" + str(os.environ["BBHome_TEMP"]) + NamePDB)
 
-    if opSystem == "linux":
-        shutil.copy(PDBPath, quotedPath(homePath + "tmp" + os.sep + NamePDB + os.sep + "original.pdb"))
-    elif opSystem == "darwin":
-        shutil.copy(PDBPath, quotedPath(homePath + "tmp" + os.sep + NamePDB + os.sep + "original.pdb"))
+    if str(os.environ["opSystem"]) == "linux":
+        shutil.copy(PDBPath, quotedPath(str(os.environ["BBHome_TEMP"]) + NamePDB + os.sep + "original.pdb"))
+    elif str(os.environ["opSystem"]) == "darwin":
+        shutil.copy(PDBPath, quotedPath(str(os.environ["BBHome_TEMP"]) + NamePDB + os.sep + "original.pdb"))
     else:
         print("Precopy")
-        shutil.copy(r"\\?\\" + PDBPath, r"\\?\\" + homePath + "tmp" + os.sep + NamePDB + os.sep + "original.pdb")
+        shutil.copy(r"\\?\\" + PDBPath, r"\\?\\" + str(os.environ["BBHome_TEMP"]) + NamePDB + os.sep + "original.pdb")
 
     print("Exporting PDB...")
-    exportPDB(path=homePath + "tmp" + os.sep + NamePDB + os.sep + "tmp.pdb", tag=bpy.data.objects[pE].name.split("#")[0], sPid=setupPDBid)
+    exportPDB(path=str(os.environ["BBHome_TEMP"]) + NamePDB + os.sep + "tmp.pdb", tag=bpy.data.objects[pE].name.split("#")[0], sPid=setupPDBid)
 
     print("Setup is complete!")
 
 
 # export scene to PDB file; if no path is specified, it writes to tmp.pdb
-def exportPDB(path=homePath + "tmp" + os.sep + NamePDB + os.sep + "tmp.pdb", tag=None, verbose=False, sPid=None):
+def exportPDB(path=str(os.environ["BBHome_TEMP"]) + NamePDB + os.sep + "tmp.pdb", tag=None, verbose=False, sPid=None):
     print("=============== exporting PDB")
     print("Exporting model '%s' to %s" % (tag, path))
 
@@ -252,7 +252,7 @@ def surface(sPid=0, optName=""):
     quality = "1"
 
     try:
-        oPath = homePath + "tmp" + os.sep + NamePDB + os.sep + "tmp.pdb"
+        oPath = str(os.environ["BBHome_TEMP"]) + NamePDB + os.sep + "tmp.pdb"
         f = open(oPath, "r")
         lines = f.readlines()
         lineCounter = 0
@@ -270,9 +270,9 @@ def surface(sPid=0, optName=""):
         s = "Unable to fix tmp.pdb: " + str(E)
         print(s)
 
-    tmpPathO = homePath + "tmp" + os.sep + MLP.NamePDBMLP(sPid) + os.sep + "surface.pml"
-    tmpPathL = "load " + homePath + "tmp" + os.sep + MLP.NamePDBMLP(sPid) + os.sep + "tmp.pdb" + "\n"
-    tmpPathS = "save " + homePath + "tmp" + os.sep + MLP.NamePDBMLP(sPid) + os.sep + "tmp.wrl" + "\n"
+    tmpPathO = str(os.environ["BBHome_TEMP"]) + MLP.NamePDBMLP(sPid) + os.sep + "surface.pml"
+    tmpPathL = "load " + str(os.environ["BBHome_TEMP"]) + MLP.NamePDBMLP(sPid) + os.sep + "tmp.pdb" + "\n"
+    tmpPathS = "save " + str(os.environ["BBHome_TEMP"]) + MLP.NamePDBMLP(sPid) + os.sep + "tmp.wrl" + "\n"
 
     with open(tmpPathO, mode="w") as f:
         f.write("# This file is automatically generated by BioBlender at runtime.\n")
@@ -288,12 +288,12 @@ def surface(sPid=0, optName=""):
         f.write(tmpPathS)
         f.write("quit")
     print("Making Surface using PyMOL")
-    command = "%s -c -u %s" % (quotedPath(pyMolPath), quotedPath(homePath + "tmp" + os.sep + MLP.NamePDBMLP(sPid) + os.sep + "surface.pml"))
+    command = "%s -c -u %s" % (quotedPath(str(os.environ["pyMolPath"])), quotedPath(str(os.environ["BBHome_TEMP"]) + MLP.NamePDBMLP(sPid) + os.sep + "surface.pml"))
 
     command = quotedPath(command)
     launch(exeName=command)
 
-    bpy.ops.import_scene.x3d(filepath=homePath + "tmp" + os.sep + MLP.NamePDBMLP(sPid) + os.sep + "tmp.wrl", axis_forward="Y", axis_up="Z")
+    bpy.ops.import_scene.x3d(filepath=str(os.environ["BBHome_TEMP"]) + MLP.NamePDBMLP(sPid) + os.sep + "tmp.wrl", axis_forward="Y", axis_up="Z")
     try:
         ob = bpy.data.objects['Shape_IndexedFaceSet']
         if optName:
@@ -328,9 +328,9 @@ def quotedPath(stringaInput):
     else:
         if (stringaInput.startswith("\"")) and (stringaInput.endswith("\"")):
             return stringaInput
-    if opSystem == "linux":
+    if str(os.environ["opSystem"]) == "linux":
         return stringaInput
-    elif opSystem == "darwin":
+    elif str(os.environ["opSystem"]) == "darwin":
         return stringaInput
     else:
         stringaOutput = "\"" + stringaInput + "\""
@@ -340,9 +340,9 @@ def quotedPath(stringaInput):
 # launch app in separate process, for better performance on multithreaded computers
 def launch(exeName, asynct=False):
     # try to hide window (does not work recursively)
-    if opSystem == "linux":
+    if str(os.environ["opSystem"]) == "linux":
         istartupinfo = None
-    elif opSystem == "darwin":
+    elif str(os.environ["opSystem"]) == "darwin":
         istartupinfo = None
     else:
         istartupinfo = subprocess.STARTUPINFO()
