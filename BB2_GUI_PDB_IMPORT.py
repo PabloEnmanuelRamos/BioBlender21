@@ -75,7 +75,7 @@ def bootstrapping():
     elementiDaImportare = ['Empty', 'Hemi']
     try:
         for objName in elementiDaImportare:
-            Directory = homePath + "data" + os.sep + "EmptySet.blend" + "/" + "Object" + "/"
+            Directory = str(os.environ["BBHome_DATA"]) + "EmptySet.blend" + "/" + "Object" + "/"
             Path = os.sep + os.sep + "data" + os.sep + "EmptySet.blend" + "/" + "Object" + "/" + objName
             append_file_to_current_blend(Path, objName, Directory)
     except Exception as E:
@@ -269,18 +269,18 @@ def importPreview(verbose=False, retrieved=False):
 def pdbdotorg(id):
     print("pdbdotorg")
     url1 = str("http://www.pdb.org/pdb/files/" + id + ".pdb")
-    save1 = str(homePath + "fetched" + os.sep + id + ".pdb")
-    if opSystem == "linux":
-        if not os.path.isdir(quotedPath(homePath + "fetched")):
-            os.mkdir(quotedPath(homePath + "fetched"))
-    elif opSystem == "darwin":
-        if not os.path.isdir(quotedPath(homePath + "fetched")):
-            os.mkdir(quotedPath(homePath + "fetched"))
+    save1 = str(str(os.environ["BBHome_FETCHED"]) + id + ".pdb")
+    if str(os.environ["opSystem"]) == "linux":
+        if not os.path.isdir(quotedPath(str(os.environ["BBHome"]) + "fetched")):
+            os.mkdir(quotedPath(str(os.environ["BBHome"]) + "fetched"))
+    elif str(os.environ["opSystem"]) == "darwin":
+        if not os.path.isdir(quotedPath(str(os.environ["BBHome"]) + "fetched")):
+            os.mkdir(quotedPath(str(os.environ["BBHome"]) + "fetched"))
     else:
-        if not os.path.isdir(r"\\?\\" + homePath + "fetched"):
-            os.mkdir(r"\\?\\" + homePath + "fetched")
+        if not os.path.isdir(r"\\?\\" + str(os.environ["BBHome"]) + "fetched"):
+            os.mkdir(r"\\?\\" + str(os.environ["BBHome"]) + "fetched")
     # get file from the web
-    if opSystem == "linux":
+    if str(os.environ["opSystem"]) == "linux":
         import ssl
         context = ssl._create_unverified_context()
         text = urlopen(url1, context=context).read().decode()
@@ -512,7 +512,7 @@ def core_sort_hr():
     # loading the Atom from library.blend
     try:
         objName = "atom"
-        Directory = homePath + "data" + os.sep + "library.blend" + os.sep + "Object" + os.sep
+        Directory = str(os.environ["BBHome_DATA"]) + "library.blend" + os.sep + "Object" + os.sep
         Path = os.sep + os.sep + "data" + os.sep + "library.blend" + os.sep + "Object" + os.sep + objName
         append_file_to_current_blend(Path, objName, Directory)
 
@@ -604,99 +604,100 @@ def core_createModels():
                 raise Exception("Unable to generate 3D model from PDB File", E)
 
             # MAKE BONDS
-            try:
-                mainChainCache = mainChainCacheDict[int(pdbID)]
-                mainChainCache_Nucleic = mainChainCache_NucleicDict[int(pdbID)]
-                mainChainCache_Nucleic_Filtered = mainChainCache_Nucleic_FilteredDict[int(pdbID)]
-                chainCache = chainCacheDict[int(pdbID)]
-                chainCache_Nucleic = chainCache_NucleicDict[int(pdbID)]
-                tmpModel = (pdbIDmodelsDictionary[int(pdbID)])[m]
-                # =====
-                cacheSize = len(mainChainCache) - 1
-                for i, entry in enumerate(mainChainCache):
-                    # Skipping Last Atom to avoid cyclic dependency
-                    if i < cacheSize:
-                        # Adding constraints, using atom position to correctly orient hinge x axis
-                        obj = bpy.data.objects[entry]
-                        nextEntry = bpy.data.objects[mainChainCache[i + 1]]
-                        line = tmpModel[entry]
-                        obj.location = line.get("loc")
-                        line = tmpModel[mainChainCache[i + 1]]
-                        nextEntry.location = line.get("loc")
-                        addRigidBodyRotamer(obj, nextEntry)
+            if bpy.context.scene.BBImportMakeBonds:
+                try:
+                    mainChainCache = mainChainCacheDict[int(pdbID)]
+                    mainChainCache_Nucleic = mainChainCache_NucleicDict[int(pdbID)]
+                    mainChainCache_Nucleic_Filtered = mainChainCache_Nucleic_FilteredDict[int(pdbID)]
+                    chainCache = chainCacheDict[int(pdbID)]
+                    chainCache_Nucleic = chainCache_NucleicDict[int(pdbID)]
+                    tmpModel = (pdbIDmodelsDictionary[int(pdbID)])[m]
+                    # =====
+                    cacheSize = len(mainChainCache) - 1
+                    for i, entry in enumerate(mainChainCache):
+                        # Skipping Last Atom to avoid cyclic dependency
+                        if i < cacheSize:
+                            # Adding constraints, using atom position to correctly orient hinge x axis
+                            obj = bpy.data.objects[entry]
+                            nextEntry = bpy.data.objects[mainChainCache[i + 1]]
+                            line = tmpModel[entry]
+                            obj.location = line.get("loc")
+                            line = tmpModel[mainChainCache[i + 1]]
+                            nextEntry.location = line.get("loc")
+                            addRigidBodyRotamer(obj, nextEntry)
 
-                # bonds for Nucleic Acids
-                cacheSize = len(mainChainCache_Nucleic_Filtered) - 1
-                for i, entry in enumerate(mainChainCache_Nucleic_Filtered):
-                    # Skipping Last Atom to avoid cyclic dependency
-                    if i < cacheSize:
-                        # Adding constraints, using atom position to correctly orient hinge x axis
-                        obj = bpy.data.objects[entry]
-                        nextEntry = bpy.data.objects[mainChainCache_Nucleic_Filtered[i + 1]]
-                        line = tmpModel[entry]
-                        obj.location = line.get("loc")
-                        line = tmpModel[mainChainCache_Nucleic_Filtered[i + 1]]
-                        nextEntry.location = line.get("loc")
-                        addRigidBodyRotamer(obj, nextEntry)
-                chainCache = sorted(chainCache.items())
-                for entry in chainCache:
-                    line = entry[1].split("#")
-                    amac = line[0]
-                    chainSeq = line[1]
-                    atom = line[2]
-                    chainID = line[3]
-                    # skip mainchain atoms
-                    if atom != C and atom != CA and atom != N and atom != H:
-                        # for side chain, look up parents based on rules
-                        parent = bondLookUp(atom=atom, amac=amac)
-                        # generate name of parents
-                        target = amac + "#" + chainSeq + "#" + parent[0] + "#" + chainID + "#" + parent[1]
-                        # lookup name of blenderobject based on parent name
-                        targetKey = "atom"
-                        for item in chainCache:
-                            if item[1] == target:
-                                targetKey = item[0]
-                                break
-                        # set up the constraint.
-                        if targetKey == "atom":
-                            print("TargetKey not set, will skip Rigid Body Joint")
-                        else:
-                            obj = bpy.data.objects[entry[0]]
-                            line = tmpModel[entry[0]]
+                    # bonds for Nucleic Acids
+                    cacheSize = len(mainChainCache_Nucleic_Filtered) - 1
+                    for i, entry in enumerate(mainChainCache_Nucleic_Filtered):
+                        # Skipping Last Atom to avoid cyclic dependency
+                        if i < cacheSize:
+                            # Adding constraints, using atom position to correctly orient hinge x axis
+                            obj = bpy.data.objects[entry]
+                            nextEntry = bpy.data.objects[mainChainCache_Nucleic_Filtered[i + 1]]
+                            line = tmpModel[entry]
                             obj.location = line.get("loc")
-                            line = tmpModel[targetKey]
+                            line = tmpModel[mainChainCache_Nucleic_Filtered[i + 1]]
                             nextEntry.location = line.get("loc")
-                            addRigidBodyRotamer(obj, bpy.data.objects[targetKey])
-                chainCache = sorted(chainCache_Nucleic.items())
-                for entry in chainCache:
-                    line = entry[1].split("#")
-                    amac = line[0]
-                    chainSeq = line[1]
-                    atom = line[2]
-                    chainID = line[3]
-                    if atom not in NucleicAtoms:
-                        # for side chain, look up parents based on rules
-                        parent = bondLookUp_NucleicMain(atom=atom, amac=amac)
-                        # generate name of parents
-                        target = amac + "#" + chainSeq + "#" + parent[0] + "#" + chainID + "#" + parent[1]
-                        # lookup name of blenderobject based on parent name
-                        targetKey = "atom"
-                        for item in chainCache:
-                            if item[1] == target:
-                                targetKey = item[0]
-                                break
-                        # set up the constraint
-                        if targetKey == "atom":
-                            print("TargetKey not set, will skip Rigid Body Joint")
-                        else:
-                            obj = bpy.data.objects[entry[0]]
-                            line = tmpModel[entry[0]]
-                            obj.location = line.get("loc")
-                            line = tmpModel[targetKey]
-                            nextEntry.location = line.get("loc")
-                            addRigidBodyRotamer(obj, bpy.data.objects[targetKey])
-            except Exception as E:
-                raise Exception("Unable to generate all bonds and constraints:", E)
+                            addRigidBodyRotamer(obj, nextEntry)
+                    chainCache = sorted(chainCache.items())
+                    for entry in chainCache:
+                        line = entry[1].split("#")
+                        amac = line[0]
+                        chainSeq = line[1]
+                        atom = line[2]
+                        chainID = line[3]
+                        # skip mainchain atoms
+                        if atom != C and atom != CA and atom != N and atom != H:
+                            # for side chain, look up parents based on rules
+                            parent = bondLookUp(atom=atom, amac=amac)
+                            # generate name of parents
+                            target = amac + "#" + chainSeq + "#" + parent[0] + "#" + chainID + "#" + parent[1]
+                            # lookup name of blenderobject based on parent name
+                            targetKey = "atom"
+                            for item in chainCache:
+                                if item[1] == target:
+                                    targetKey = item[0]
+                                    break
+                            # set up the constraint.
+                            if targetKey == "atom":
+                                print("TargetKey not set, will skip Rigid Body Joint")
+                            else:
+                                obj = bpy.data.objects[entry[0]]
+                                line = tmpModel[entry[0]]
+                                obj.location = line.get("loc")
+                                line = tmpModel[targetKey]
+                                nextEntry.location = line.get("loc")
+                                addRigidBodyRotamer(obj, bpy.data.objects[targetKey])
+                    chainCache = sorted(chainCache_Nucleic.items())
+                    for entry in chainCache:
+                        line = entry[1].split("#")
+                        amac = line[0]
+                        chainSeq = line[1]
+                        atom = line[2]
+                        chainID = line[3]
+                        if atom not in NucleicAtoms:
+                            # for side chain, look up parents based on rules
+                            parent = bondLookUp_NucleicMain(atom=atom, amac=amac)
+                            # generate name of parents
+                            target = amac + "#" + chainSeq + "#" + parent[0] + "#" + chainID + "#" + parent[1]
+                            # lookup name of blenderobject based on parent name
+                            targetKey = "atom"
+                            for item in chainCache:
+                                if item[1] == target:
+                                    targetKey = item[0]
+                                    break
+                            # set up the constraint
+                            if targetKey == "atom":
+                                print("TargetKey not set, will skip Rigid Body Joint")
+                            else:
+                                obj = bpy.data.objects[entry[0]]
+                                line = tmpModel[entry[0]]
+                                obj.location = line.get("loc")
+                                line = tmpModel[targetKey]
+                                nextEntry.location = line.get("loc")
+                                addRigidBodyRotamer(obj, bpy.data.objects[targetKey])
+                except Exception as E:
+                    raise Exception("Unable to generate all bonds and constraints:", E)
         # for all models, insert key frame
         try:
             for key, line in ((pdbIDmodelsDictionary[int(pdbID)])[m]).items():
@@ -960,11 +961,14 @@ def core_cleaningUp():
 def atomAction():
     print("atom_action")
     for obj in bpy.data.objects:
-        if obj.BBInfo:
+        if obj.BBInfo and obj.bb2_objectType == "ATOM":
             obj.select_set(True)
             bpy.context.view_layer.objects.active = obj
             actionName = str(obj.name + "Action")
             if actionName in bpy.data.actions.keys():
+                obj.game.actuators['F-Curve'].type = 'ACTION'
+                obj.game.actuators['F-Curve'].play_mode = 'LOOPSTOP'
+                # bpy.ops.logic.actuator_add(type="ACTION", name="F-Curve", object=actionName)
                 obj.game.actuators['F-Curve'].action = bpy.data.actions[actionName]
                 obj.game.actuators['F-Curve'].frame_end = bpy.data.actions[actionName].frame_range[1]
             obj.select_set(False)
