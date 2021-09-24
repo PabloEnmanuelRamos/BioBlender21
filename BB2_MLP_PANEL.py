@@ -240,33 +240,32 @@ def mlp(tID, force):
                 method = "buckingham"
 
             # Launch this in a separate process
-            if opSystem == "linux":
+            if str(os.environ["opSystem"]) == "linux":
                 command = "chmod 755 %s" % (
-                    panel.quotedPath(homePath + "bin" + os.sep + "pyMLP-1.0" + os.sep + "pyMLP.py"))
+                    panel.quotedPath(str(os.environ["BBHome_BIN_PyMLP"]) + "pyMLP.py"))
                 command = panel.quotedPath(command)
                 panel.launch(exeName=command)
-            elif opSystem == "darwin":
+            elif str(os.environ["opSystem"]) == "darwin":
                 command = "chmod 755 %s" % (
-                    panel.quotedPath(homePath + "bin" + os.sep + "pyMLP-1.0" + os.sep + "pyMLP.py"))
+                    panel.quotedPath(str(os.environ["BBHome_BIN_PyMLP"]) + "pyMLP.py"))
                 command = panel.quotedPath(command)
                 panel.launch(exeName=command)
             print("Running PyMLP")
-            global pyPath
             if os.sys.platform == "linux":
-                pyPath = "python"
+                os.environ["pyPath"] = "python"
                 if os.path.exists("/usr/bin/python3.9"):
-                    pyPath = "python3.9"
+                    os.environ["pyPath"] = "python3.9"
                 elif os.path.exists("/usr/bin/python3.8"):
-                    pyPath = "python3.8"
+                    os.environ["pyPath"] = "python3.8"
                 elif os.path.exists("/usr/bin/python3"):
-                    pyPath = "python3"
+                    os.environ["pyPath"] = "python3"
                 elif os.path.exists("/usr/bin/python"):
-                    pyPath = "python"
+                    os.environ["pyPath"] = "python"
                 elif os.path.exists("/usr/bin/python2"):
-                    pyPath = "python2"
-            if not pyPath:
-                pyPath = "python"
-            command = "%s %s -i %s -m %s -s %f -o %s -v" % (panel.quotedPath(pyPath), panel.quotedPath(homePath + "bin" + os.sep + "pyMLP-1.0" + os.sep + "pyMLP.py"), panel.quotedPath(homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "tmp.pdb"), method, spacing, panel.quotedPath(homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "tmp.dx"))
+                    os.environ["pyPath"] = "python2"
+            if not str(os.environ["pyPath"]):
+                os.environ["pyPath"] = "python"
+            command = "%s %s -i %s -m %s -s %f -o %s -v" % (panel.quotedPath(str(os.environ["pyPath"])), panel.quotedPath(str(os.environ["BBHome_BIN_PyMLP"]) + "pyMLP.py"), panel.quotedPath(str(os.environ["BBHome_TEMP"]) + NamePDBMLP(tID) + os.sep + "tmp.pdb"), method, spacing, panel.quotedPath(str(os.environ["BBHome_TEMP"]) + NamePDBMLP(tID) + os.sep + "tmp.dx"))
             p = panel.launch(exeName=command, asynct=True)
 
             print("PyMLP command succeded")
@@ -284,7 +283,7 @@ def mlp(tID, force):
             print("Loading MLP values into Blender")
 
             try:
-                tmpPathO = homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "tmp.dx"
+                tmpPathO = str(os.environ["BBHome_TEMP"]) + NamePDBMLP(tID) + os.sep + "tmp.dx"
                 with open(tmpPathO) as dx:
                     for line in dx:
                         # skip comments starting with #
@@ -425,7 +424,7 @@ def mlpRender(tID):
         raise Exception("No MLP data is loaded.  Run MLP calculation first")
 
     # Vertex Color
-    Directory = homePath + "data" + os.sep + "Vetex.blend" + os.sep + "Material" + os.sep
+    Directory = str(os.environ["BBHome_DATA"]) + "Vetex.blend" + os.sep + "Material" + os.sep
     Path = os.sep + os.sep + "data" + os.sep + "Vetex.blend" + os.sep + "Material" + os.sep + "matVetex"
     objName = "matVetex"
 
@@ -465,73 +464,73 @@ def mlpRender(tID):
     bpy.ops.object.bake(type="DIFFUSE", filepath="", target='IMAGE_TEXTURES')
     print("=====          ... BAKED! =====")
 
-    if opSystem == "linux":
-        os.chdir(panel.quotedPath(homePath + "tmp" + os.sep + NamePDBMLP(
+    if str(os.environ["opSystem"]) == "linux":
+        os.chdir(panel.quotedPath(str(os.environ["BBHome_TEMP"]) + NamePDBMLP(
             tID) + os.sep))
-    elif opSystem == "darwin":
-        os.chdir(panel.quotedPath(homePath + "tmp" + os.sep + NamePDBMLP(
+    elif str(os.environ["opSystem"]) == "darwin":
+        os.chdir(panel.quotedPath(str(os.environ["BBHome_TEMP"]) + NamePDBMLP(
             tID) + os.sep))
     else:
-        os.chdir(r"\\?\\" + homePath + "tmp" + os.sep + NamePDBMLP(
+        os.chdir(r"\\?\\" + str(os.environ["BBHome_TEMP"]) + NamePDBMLP(
             tID) + os.sep)
 
     print("Image Save Render")
-    image.save_render(homePath + "tmp" + os.sep + NamePDBMLP(
+    image.save_render(str(os.environ["BBHome_TEMP"]) + NamePDBMLP(
         tID) + os.sep + "MLPBaked.png")
     # copy the needed files
     print("Copy the needed files")
-    uriSource = homePath + "data" + os.sep + "noise.png"
-    uriDest = homePath + "tmp" + os.sep + NamePDBMLP(
+    uriSource = str(os.environ["BBHome_DATA"]) + "noise.png"
+    uriDest = str(os.environ["BBHome_TEMP"]) + NamePDBMLP(
         tID) + os.sep + "noise.png"
 
-    if opSystem == "linux":
+    if str(os.environ["opSystem"]) == "linux":
         shutil.copy(uriSource, uriDest)
-    elif opSystem == "darwin":
+    elif str(os.environ["opSystem"]) == "darwin":
         shutil.copy(uriSource, uriDest)
     else:
         shutil.copy(r"\\?\\" + uriSource, r"\\?\\" + uriDest)
 
-    uriSource = homePath + "data" + os.sep + "composite.blend"
-    uriDest = homePath + "tmp" + os.sep + NamePDBMLP(
+    uriSource = str(os.environ["BBHome_DATA"]) + "composite.blend"
+    uriDest = str(os.environ["BBHome_TEMP"]) + NamePDBMLP(
         tID) + os.sep + "composite.blend"
 
-    if opSystem == "linux":
+    if str(os.environ["opSystem"]) == "linux":
         shutil.copy(uriSource, uriDest)
-    elif opSystem == "darwin":
+    elif str(os.environ["opSystem"]) == "darwin":
         shutil.copy(uriSource, uriDest)
     else:
         shutil.copy(r"\\?\\" + uriSource, r"\\?\\" + uriDest)
 
     # render out composite texture
-    if blenderPath == "":
+    if str(os.environ["blenderPath"]) == "":
         bP = panel.quotedPath(str(os.environ['PWD']) + os.sep + "blender")
-        command = "%s -b %s -f 1" % (panel.quotedPath(bP), panel.quotedPath(homePath + "tmp" + os.sep + NamePDBMLP(
+        command = "%s -b %s -f 1" % (panel.quotedPath(bP), panel.quotedPath(str(os.environ["BBHome_TEMP"]) + NamePDBMLP(
             tID) + os.sep + "composite.blend"))
     else:
-        command = "%s -b %s -f 1" % (panel.quotedPath(blenderPath), panel.quotedPath(homePath + "tmp" + os.sep + NamePDBMLP(
+        command = "%s -b %s -f 1" % (panel.quotedPath(str(os.environ["blenderPath"])), panel.quotedPath(str(os.environ["BBHome_TEMP"]) + NamePDBMLP(
             tID) + os.sep + "composite.blend"))
     panel.launch(exeName=command)
 
     print("Copy the needed files")
-    uriSource = homePath + "data" + os.sep + "MLPSurface.blend"
-    uriDest = homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "MLPSurface.blend"
+    uriSource = str(os.environ["BBHome_DATA"]) + "MLPSurface.blend"
+    uriDest = str(os.environ["BBHome_TEMP"]) + NamePDBMLP(tID) + os.sep + "MLPSurface.blend"
 
-    if opSystem == "linux":
+    if str(os.environ["opSystem"]) == "linux":
         shutil.copy(uriSource, uriDest)
-    elif opSystem == "darwin":
+    elif str(os.environ["opSystem"]) == "darwin":
         shutil.copy(uriSource, uriDest)
     else:
         shutil.copy(r"\\?\\" + uriSource, r"\\?\\" + uriDest)
 
     NameMaterial = "matMLP_" + NamePDBMLP(tID) + "_" + getNumFrameMLP()
 
-    if os.path.exists(homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "0001_" + NamePDBMLP(
+    if os.path.exists(str(os.environ["BBHome_TEMP"]) + NamePDBMLP(tID) + os.sep + "0001_" + NamePDBMLP(
             tID) + "_" + getNumFrameMLP() + ".png"):
-        os.remove(homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "0001_" + NamePDBMLP(
+        os.remove(str(os.environ["BBHome_TEMP"]) + NamePDBMLP(tID) + os.sep + "0001_" + NamePDBMLP(
             tID) + "_" + getNumFrameMLP() + ".png")
 
-    os.rename(homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "0001.png",
-              homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "0001_" + NamePDBMLP(
+    os.rename(str(os.environ["BBHome_TEMP"]) + NamePDBMLP(tID) + os.sep + "0001.png",
+              str(os.environ["BBHome_TEMP"]) + NamePDBMLP(tID) + os.sep + "0001_" + NamePDBMLP(
                   tID) + "_" + getNumFrameMLP() + ".png")
     try:
         mat = bpy.data.materials[NameMaterial]
@@ -540,7 +539,7 @@ def mlpRender(tID):
         bpy.data.images.remove(img_bump)
         ob.select_set(True)
         bpy.context.view_layer.objects.active = ob
-        bpy.ops.image.open(filepath=homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "0001.png", use_sequence_detection=True, relative_path=True)
+        bpy.ops.image.open(filepath=str(os.environ["BBHome_TEMP"]) + NamePDBMLP(tID) + os.sep + "0001.png", use_sequence_detection=True, relative_path=True)
         bpy.data.images["0001.png"].name = "0001_" + NamePDBMLP(tID) + "_" + getNumFrameMLP() + ".png"
         bpy.data.materials["matMLP_" + NamePDBMLP(tID) + "_" + getNumFrameMLP()].node_tree.nodes["Imagen"].image = bpy.data.images["0001_" + NamePDBMLP(tID) + "_" + getNumFrameMLP() + ".png"]
         bpy.data.materials["matMLP_" + NamePDBMLP(tID) + "_" + getNumFrameMLP()].node_tree.nodes["Image Texture"].image = bpy.data.images["MLPBaked_" + NamePDBMLP(tID) + "_" + getNumFrameMLP()]
@@ -550,14 +549,14 @@ def mlpRender(tID):
         for o in bpy.data.objects:
             o.select_set(False)
 
-        Directory = homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "MLPSurface.blend" + os.sep + "Object" + os.sep
+        Directory = str(os.environ["BBHome_TEMP"]) + NamePDBMLP(tID) + os.sep + "MLPSurface.blend" + os.sep + "Object" + os.sep
         Path = os.sep + os.sep + "tmp" + os.sep + NamePDBMLP(
             tID) + os.sep + "MLPSurface.blend" + os.sep + "Object" + os.sep + "DirectLight"
         objName = "DirectLight"
 
         append_file_to_current_blend(Path, objName, Directory)
 
-        Directory = homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "MLPSurface.blend" + os.sep + "Material" + os.sep
+        Directory = str(os.environ["BBHome_TEMP"]) + NamePDBMLP(tID) + os.sep + "MLPSurface.blend" + os.sep + "Material" + os.sep
         Path = os.sep + os.sep + "tmp" + os.sep + NamePDBMLP(
             tID) + os.sep + "MLPSurface.blend" + os.sep + "Material" + os.sep + "matMLP"
         objName = "matMLP"
@@ -567,7 +566,7 @@ def mlpRender(tID):
         mat = bpy.data.materials["matMLP"]
         mat.name = NameMaterial
 
-        Directory = homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "MLPSurface.blend" + os.sep + "Texture" + os.sep
+        Directory = str(os.environ["BBHome_TEMP"]) + NamePDBMLP(tID) + os.sep + "MLPSurface.blend" + os.sep + "Texture" + os.sep
         Path = os.sep + os.sep + "tmp" + os.sep + NamePDBMLP(
             tID) + os.sep + "MLPSurface.blend" + os.sep + "Texture" + os.sep + "Surface"
         objName = "Surface"
@@ -578,7 +577,7 @@ def mlpRender(tID):
 
         ob.select_set(True)
         bpy.context.view_layer.objects.active = ob
-        bpy.ops.image.open(filepath=homePath + "tmp" + os.sep + NamePDBMLP(tID) + os.sep + "0001_" + NamePDBMLP(
+        bpy.ops.image.open(filepath=str(os.environ["BBHome_TEMP"]) + NamePDBMLP(tID) + os.sep + "0001_" + NamePDBMLP(
             tID) + "_" + getNumFrameMLP() + ".png", use_sequence_detection=True, relative_path=True)
 
         bpy.data.images["MLPBaked" + NamePDBMLP(tID)].name = "MLPBaked_" + NamePDBMLP(tID) + "_" + getNumFrameMLP()
