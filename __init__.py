@@ -79,6 +79,7 @@ class BB2_PT_GUI_PDB_IMPORT(bpy.types.Panel):
     bpy.types.Scene.BBImportHydrogen = bpy.props.BoolProperty(attr="BBImportHydrogen", name="Import Hydrogen",
                                                               description="Import hydrogen atoms (Slower)",
                                                               default=False)
+    bpy.types.Scene.BBImportMakeBonds = bpy.props.BoolProperty(attr="BBImportMakeBonds", name="Make Bonds", description="Generate the bonds between each atom", default=False)
 
     # ================
     def draw(self, context):
@@ -108,6 +109,8 @@ class BB2_PT_GUI_PDB_IMPORT(bpy.types.Panel):
             row.prop(scene, "BBImportChainOrder")
             row = layout.row()
             row.prop(scene, "BBImportHydrogen")
+            row = layout.row()
+            row.prop(scene, "BBImportMakeBonds")
             row = layout.row()
             row.scale_y = 2
             row.operator("ops.bb2_operator_import")
