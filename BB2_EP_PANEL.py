@@ -140,7 +140,7 @@ def scenewideEP(animation):
 
     if (not animation) or (bpy.context.scene.frame_current % 5 == 1):
         print("Generating EP Curves")
-        tmpPathOpen = homePath + "tmp" + os.sep + "scenewide.pdb"  # former tmp.pdb
+        tmpPathOpen = str(os.environ["BBHome"]) + "tmp" + os.sep + "scenewide.pdb"  # former tmp.pdb
         scenewideSurface()
 
         with open(tmpPathOpen, "r") as file:
@@ -173,19 +173,19 @@ def scenewideEP(animation):
             method = "swanson"
 
         print("Running PDB2PQR")
-        if opSystem == "linux":
-            os.chdir(panel.quotedPath(homePath + "bin" + os.sep + "pdb2pqr-1.6" + os.sep))
-        elif opSystem == "darwin":
-            os.chdir(panel.quotedPath(homePath + "bin" + os.sep + "pdb2pqr-1.6" + os.sep))
+        if str(os.environ["opSystem"]) == "linux":
+            os.chdir(panel.quotedPath(str(os.environ["BBHome_BIN_PDBPQR"])))
+        elif str(os.environ["opSystem"]) == "darwin":
+            os.chdir(panel.quotedPath(str(os.environ["BBHome_BIN_PDBPQR"])))
         else:
-            os.chdir(r"\\?\\" + homePath + "bin" + os.sep + "pdb2pqr-1.6" + os.sep)
-        tmpPathPar1 = pyPath
-        tmpPathPar2 = homePath + "bin" + os.sep + "pdb2pqr-1.6" + os.sep + "pdb2pqr.py"
-        tmpPathPar3 = homePath + "tmp" + os.sep + "scenewide.pqr"
-        tmpPathPar4 = homePath + "tmp" + os.sep + "scenewide.pdb"
-        if opSystem == "linux":
+            os.chdir(r"\\?\\" + str(os.environ["BBHome_BIN_PDBPQR"]))
+        tmpPathPar1 = str(os.environ["pyPath"])
+        tmpPathPar2 = str(os.environ["BBHome_BIN_PDBPQR"]) + "pdb2pqr.py"
+        tmpPathPar3 = str(os.environ["BBHome_TEMP"]) + "scenewide.pqr"
+        tmpPathPar4 = str(os.environ["BBHome"]) + "tmp" + os.sep + "scenewide.pdb"
+        if str(os.environ["opSystem"]) == "linux":
             command = "%s %s --apbs-input --ff=%s %s %s" % (tmpPathPar1, tmpPathPar2, method, tmpPathPar4, tmpPathPar3)
-        elif opSystem == "darwin":
+        elif str(os.environ["opSystem"]) == "darwin":
             command = "%s %s --apbs-input --ff=%s %s %s" % (tmpPathPar1, tmpPathPar2, method, tmpPathPar4, tmpPathPar3)
         else:
             command = "%s %s --apbs-input --ff=%s %s %s" % (
@@ -194,13 +194,13 @@ def scenewideEP(animation):
         panel.launch(exeName=command)
 
         print("Running inputgen.py")
-        tmp1PathPar1 = pyPath
-        tmp1PathPar2 = homePath + "bin" + os.sep + "pdb2pqr-1.6" + os.sep + "src" + os.sep + "inputgen.py"
-        tmp1PathPar3 = homePath + "tmp" + os.sep + "scenewide.pqr"
-        if opSystem == "linux":
+        tmp1PathPar1 = str(os.environ["pyPath"])
+        tmp1PathPar2 = str(os.environ["BBHome_BIN_PDBPQR"]) + "src" + os.sep + "inputgen.py"
+        tmp1PathPar3 = str(os.environ["BBHome_TEMP"]) + "scenewide.pqr"
+        if str(os.environ["opSystem"]) == "linux":
             command = "%s %s --istrng=%f --method=auto --space=%f %s" % (
                 tmp1PathPar1, tmp1PathPar2, bpy.context.scene.BBEPIonConc, bpy.context.scene.BBEPGridStep, tmp1PathPar3)
-        elif opSystem == "darwin":
+        elif str(os.environ["opSystem"]) == "darwin":
             command = "%s %s --istrng=%f --method=auto --space=%f %s" % (
                 tmp1PathPar1, tmp1PathPar2, bpy.context.scene.BBEPIonConc, bpy.context.scene.BBEPGridStep, tmp1PathPar3)
         else:
@@ -211,48 +211,48 @@ def scenewideEP(animation):
 
         print("Running APBS")
         try:
-            if opSystem == "linux":
-                shutil.copy(panel.quotedPath(homePath + "bin" + os.sep + "apbs-1.2.1" + os.sep + "runAPBS.sh"),
-                            panel.quotedPath(homePath + "tmp" + os.sep + "runAPBS.sh"))
-            elif opSystem == "darwin":
-                shutil.copy(panel.quotedPath(homePath + "bin" + os.sep + "apbs-1.2.1" + os.sep + "darwin_apbs"),
-                            panel.quotedPath(homePath + "tmp" + os.sep + "darwin_apbs"))
+            if str(os.environ["opSystem"]) == "linux":
+                shutil.copy(panel.quotedPath(str(os.environ["BBHome_BIN_APBS"]) + "runAPBS.sh"),
+                            panel.quotedPath(str(os.environ["BBHome_TEMP"]) + "runAPBS.sh"))
+            elif str(os.environ["opSystem"]) == "darwin":
+                shutil.copy(panel.quotedPath(str(os.environ["BBHome_BIN_APBS"]) + "darwin_apbs"),
+                            panel.quotedPath(str(os.environ["BBHome_TEMP"]) + "darwin_apbs"))
             else:
-                shutil.copy(r"\\?\\" + homePath + "bin" + os.sep + "apbs-1.2.1" + os.sep + "apbs.exe",
-                            r"\\?\\" + homePath + "tmp" + os.sep + "apbs.exe")
+                shutil.copy(r"\\?\\" + str(os.environ["BBHome_BIN_APBS"]) + "apbs.exe",
+                            r"\\?\\" + str(os.environ["BBHome_TEMP"]) + "apbs.exe")
         except Exception as E:
             s = "APBS COPY failed: " + str(E)
             print(s)
-        if opSystem == "linux":
-            os.chdir(homePath + "tmp" + os.sep)
-            command = "chmod 755 %s" % (panel.quotedPath(homePath + "tmp" + os.sep + "runAPBS.sh"))
+        if str(os.environ["opSystem"]) == "linux":
+            os.chdir(str(os.environ["BBHome"]) + "tmp" + os.sep)
+            command = "chmod 755 %s" % (panel.quotedPath(str(os.environ["BBHome"]) + "tmp" + os.sep + "runAPBS.sh"))
             command = panel.quotedPath(command)
             panel.launch(exeName=command)
-            command = homePath + "tmp" + os.sep + "runAPBS.sh"
-        elif opSystem == "darwin":
-            oPath = homePath + "tmp" + os.sep + "scenewide.in"
+            command = str(os.environ["BBHome"]) + "tmp" + os.sep + "runAPBS.sh"
+        elif str(os.environ["opSystem"]) == "darwin":
+            oPath = str(os.environ["BBHome"])+ "tmp" + os.sep + "scenewide.in"
             f = open(oPath, "r")
             lines = f.readlines()
             f.close()
-            lines[1] = "    mol pqr " + panel.quotedPath(homePath + "tmp" + os.sep + "scenewide.pqr") + "\n"
+            lines[1] = "    mol pqr " + panel.quotedPath(str(os.environ["BBHome"]) + "tmp" + os.sep + "scenewide.pqr") + "\n"
             f = open(oPath, "w")
             f.writelines(lines)
             f.close()
-            command = "chmod 755 %s" % (panel.quotedPath(homePath + "tmp" + os.sep + "darwin_apbs"))
+            command = "chmod 755 %s" % (panel.quotedPath(str(os.environ["BBHome"]) + "tmp" + os.sep + "darwin_apbs"))
             command = panel.quotedPath(command)
             panel.launch(exeName=command)
-            command = homePath + "tmp" + os.sep + "darwin_apbs" + " " + homePath + "tmp" + os.sep + "scenewide.in"
+            command = str(os.environ["BBHome"]) + "tmp" + os.sep + "darwin_apbs" + " " + str(os.environ["BBHome"]) + "tmp" + os.sep + "scenewide.in"
         else:
-            oPath = homePath + "tmp" + os.sep + "scenewide.in"
+            oPath = str(os.environ["BBHome"])+ "tmp" + os.sep + "scenewide.in"
             f = open(oPath, "r")
             lines = f.readlines()
             f.close()
-            lines[1] = "    mol pqr " + panel.quotedPath(homePath + "tmp" + os.sep + "scenewide.pqr") + "\n"
+            lines[1] = "    mol pqr " + panel.quotedPath(str(os.environ["BBHome"]) + "tmp" + os.sep + "scenewide.pqr") + "\n"
             f = open(oPath, "w")
             f.writelines(lines)
             f.close()
-            command = panel.quotedPath(homePath + "tmp" + os.sep + "apbs.exe") + " " + panel.quotedPath(
-                homePath + "tmp" + os.sep + "scenewide.in")
+            command = panel.quotedPath(str(os.environ["BBHome"])+ "tmp" + os.sep + "apbs.exe") + " " + panel.quotedPath(
+                str(os.environ["BBHome"]) + "tmp" + os.sep + "scenewide.in")
         p = panel.launch(exeName=command, asynct=True)
         print("APBS Ok")
 
@@ -263,22 +263,22 @@ def scenewideEP(animation):
         print("============ POT DX POT COPY ================")
         envBoolean = False
         try:
-            if opSystem == "linux":
-                dir = homePath + "tmp" + os.sep
+            if str(os.environ["opSystem"]) == "linux":
+                dir = str(os.environ["BBHome_TEMP"])
                 ext = ".dx"
                 listDx = []
                 listDx = [x for x in os.listdir(dir) if x.endswith(ext)]
                 tmpP = ""
                 for f in listDx:
                     if f == "pot.dx":
-                        tmpP = panel.quotedPath(homePath + "tmp" + os.sep + "pot.dx")
+                        tmpP = panel.quotedPath(str(os.environ["BBHome"]) + "tmp" + os.sep + "pot.dx")
                     elif f[0:3] == "pot":
-                        tmpP = panel.quotedPath(homePath + "tmp" + os.sep + f)
+                        tmpP = panel.quotedPath(str(os.environ["BBHome"]) + "tmp" + os.sep + f)
                 if os.path.isfile(tmpP):
                     envBoolean = True
                     print("pot.dx in current directory; won't search in HOME or VIRTUALSTORE folders...")
-            elif opSystem == "darwin":
-                tmpP = panel.quotedPath(homePath + "tmp" + os.sep + "pot.dx")
+            elif str(os.environ["opSystem"]) == "darwin":
+                tmpP = panel.quotedPath(str(os.environ["BBHome"]) + "tmp" + os.sep + "pot.dx")
                 if os.path.isfile(tmpP):
                     envBoolean = True
                     print("pot.dx in current directory; won't search in HOME or VIRTUALSTORE folders...")
@@ -286,36 +286,30 @@ def scenewideEP(animation):
             s = "pot.dx output rewrite failed in tmp.in, will search in some folders...: " + str(E)
             print(s)
         if not envBoolean:
-            if opSystem == "linux":
+            if str(os.environ["opSystem"]) == "linux":
                 print("user home: ", os.path.expanduser("~"))
                 try:
                     print("BB stays here: ")
-                    homeutente = os.path.expanduser("~")
-                    dir = homeutente + "/.config/blender/" + str(bpy.data.version[0]) + "." + str(bpy.data.version[1]) + "/scripts/addons/BioBlender-master/bin/pdb2pqr-1.6/"
+                    dir = str(os.environ["BBHome_BIN_PDBPQR"])
                     ext = ".dx"
                     listDx = []
                     listDx = [x for x in os.listdir(dir) if x.endswith(ext)]
                     for f in listDx:
                         if f == "pot.dx":
-                            shutil.move(panel.quotedPath(homeutente + "/.config/blender/" + str(bpy.data.version[0]) + "." + str(bpy.data.version[1]) + "/scripts/addons/BioBlender-master/bin/pdb2pqr-1.6/pot.dx"), panel.quotedPath(homeutente + "/.config/blender/" + str(bpy.data.version[0]) + "." + str(bpy.data.version[1]) + "/scripts/addons/BioBlender-master/tmp/pot.dx"))
-                            shutil.move(panel.quotedPath(homeutente + "/.config/blender/" + str(bpy.data.version[0]) + "." + str(bpy.data.version[1]) + "/scripts/addons/BioBlender-master/bin/pdb2pqr-1.6/io.mc"), panel.quotedPath(homeutente + "/.config/blender/" + str(bpy.data.version[0]) + "." + str(bpy.data.version[1]) + "/scripts/addons/BioBlender-master/tmp/io.mc"))
+                            shutil.move(panel.quotedPath(str(os.environ["BBHome_BIN_PDBPQR"]) + "pot.dx"), panel.quotedPath(str(os.environ["BBHome_TEMP"]) + "pot.dx"))
+                            shutil.move(panel.quotedPath(str(os.environ["BBHome_BIN_PDBPQR"]) + "io.mc"), panel.quotedPath(str(os.environ["BBHome_TEMP"]) + "io.mc"))
                         elif f[0:3] == "pot":
-                            shutil.move(panel.quotedPath(homeutente + "/.config/blender/" + str(bpy.data.version[0]) + "." + str(bpy.data.version[1]) + "/scripts/addons/BioBlender-master/bin/pdb2pqr-1.6/pot.dx"), panel.quotedPath(homeutente + "/.config/blender/" + str(bpy.data.version[0]) + "." + str(bpy.data.version[1]) + "/scripts/addons/BioBlender-master/tmp/" + f))
-                            shutil.move(panel.quotedPath(homeutente + "/.config/blender/" + str(bpy.data.version[0]) + "." + str(bpy.data.version[1]) + "/scripts/addons/BioBlender-master/bin/pdb2pqr-1.6/io.mc"), panel.quotedPath(homeutente + "/.config/blender/" + str(bpy.data.version[0]) + "." + str(bpy.data.version[1]) + "/scripts/addons/BioBlender-master/tmp/io.mc"))
+                            shutil.move(panel.quotedPath(str(os.environ["BBHome_BIN_PDBPQR"]) + "pot.dx"), panel.quotedPath(str(os.environ["BBHome_TEMP"]) + f))
+                            shutil.move(panel.quotedPath(str(os.environ["BBHome_BIN_PDBPQR"]) + "io.mc"), panel.quotedPath(str(os.environ["BBHome_TEMP"]) + "io.mc"))
                 except Exception as E:
                     s = "pot.dx not found in HOME: " + str(E)
                     print(s)
-            elif opSystem == "darwin":
+            elif str(os.environ["opSystem"]) == "darwin":
                 print("user home: ", os.path.expanduser("~"))
                 try:
                     print("BB stays here: ")
-                    homeutente = os.path.expanduser("~")
-                    shutil.move(panel.quotedPath(
-                        homeutente + "/.config/blender/" + str(bpy.data.version[0]) + "." + str(bpy.data.version[1]) + "/scripts/addons/BioBlender-master/bin/pdb2pqr-1.6/pot.dx"),
-                        panel.quotedPath(homeutente + "/.config/blender/" + str(bpy.data.version[0]) + "." + str(bpy.data.version[1]) + "/scripts/addons/BioBlender-master/tmp/pot.dx"))
-                    shutil.move(panel.quotedPath(
-                        homeutente + "/.config/blender/" + str(bpy.data.version[0]) + "." + str(bpy.data.version[1]) + "/scripts/addons/BioBlender-master/bin/pdb2pqr-1.6/io.mc"),
-                        panel.quotedPath(homeutente + "/.config/blender/" + str(bpy.data.version[0]) + "." + str(bpy.data.version[1]) + "/scripts/addons/BioBlender-master/tmp/io.mc"))
+                    shutil.move(panel.quotedPath(str(os.environ["BBHome_BIN_PDBPQR"]) + "pot.dx"), panel.quotedPath(str(os.environ["BBHome_TEMP"]) + "pot.dx"))
+                    shutil.move(panel.quotedPath(str(os.environ["BBHome_BIN_PDBPQR"]) + "io.mc"), panel.quotedPath(str(os.environ["BBHome_TEMP"]) + "io.mc"))
                 except Exception as E:
                     s = "pot.dx not found in HOME: " + str(E)
                     print(s)
@@ -323,8 +317,8 @@ def scenewideEP(animation):
                 try:
                     envHome = str(os.environ['USERPROFILE'])
                     print("envHome: " + envHome)
-                    shutil.move(r"\\?\\" + envHome + os.sep + "pot.dx", r"\\?\\" + homePath + "tmp" + os.sep + "pot.dx")
-                    shutil.move(r"\\?\\" + envHome + os.sep + "io.mc", r"\\?\\" + homePath + "tmp" + os.sep + "io.mc")
+                    shutil.move(r"\\?\\" + envHome + os.sep + "pot.dx", r"\\?\\" + str(os.environ["BBHome"]) + "tmp" + os.sep + "pot.dx")
+                    shutil.move(r"\\?\\" + envHome + os.sep + "io.mc", r"\\?\\" + str(os.environ["BBHome"])+ "tmp" + os.sep + "io.mc")
                     envBoolean = True
                 except Exception as E:
                     s = "No pot.dx in HOME: " + str(E)
@@ -334,8 +328,8 @@ def scenewideEP(animation):
                     try:
                         envHome = "C:" + os.sep + "Windows"
                         print("envHome: " + envHome)
-                        shutil.move(envHome + os.sep + "pot.dx", homePath + "tmp" + os.sep + "pot.dx")
-                        shutil.move(envHome + os.sep + "io.mc", homePath + "tmp" + os.sep + "io.mc")
+                        shutil.move(envHome + os.sep + "pot.dx", str(os.environ["BBHome"]) + "tmp" + os.sep + "pot.dx")
+                        shutil.move(envHome + os.sep + "io.mc", str(os.environ["BBHome"]) + "tmp" + os.sep + "io.mc")
                         envBoolean = True
                     except Exception as E:
                         s = "Windows home failed too; no pot.dx, sorry: " + str(E)
@@ -346,8 +340,8 @@ def scenewideEP(animation):
                         envHome = str(
                             os.environ['USERPROFILE']) + os.sep + "AppData" + os.sep + "Local" + os.sep + "VirtualStore"
                         print("envHome: " + envHome)
-                        shutil.move(envHome + os.sep + "pot.dx", homePath + "tmp" + os.sep + "pot.dx")
-                        shutil.move(envHome + os.sep + "io.mc", homePath + "tmp" + os.sep + "io.mc")
+                        shutil.move(envHome + os.sep + "pot.dx", str(os.environ["BBHome"])+ "tmp" + os.sep + "pot.dx")
+                        shutil.move(envHome + os.sep + "io.mc", str(os.environ["BBHome"]) + "tmp" + os.sep + "io.mc")
                         envBoolean = True
                     except Exception as E:
                         s = "VirtualStore failed too; no pot.dx, sorry: " + str(E)
@@ -357,15 +351,15 @@ def scenewideEP(animation):
                     try:
                         envHome = str(os.environ['USERPROFILE']) + os.sep + "AppData" + os.sep + "Local" + os.sep + "VirtualStore" + os.sep + "Windows"
                         print("envHome: " + envHome)
-                        shutil.move(envHome + os.sep + "pot.dx", homePath + "tmp" + os.sep + "pot.dx")
-                        shutil.move(envHome + os.sep + "io.mc", homePath + "tmp" + os.sep + "io.mc")
+                        shutil.move(envHome + os.sep + "pot.dx", str(os.environ["BBHome"]) + "tmp" + os.sep + "pot.dx")
+                        shutil.move(envHome + os.sep + "io.mc", str(os.environ["BBHome"]) + "tmp" + os.sep + "io.mc")
                         envBoolean = True
                     except Exception as E:
                         s = "VirtualStore - Windows failed too; no pot.dx, sorry: " + str(E)
                         print(s)
                         print("=========== SORRY: CANNOT FIND POT.DX ============")
         print("Saving obj")
-        exportOBJ(homePath + "tmp" + os.sep + "scenewide")
+        exportOBJ(str(os.environ["BBHome"])+ "tmp" + os.sep + "scenewide")
 
         if len(epOBJ) >= maxCurveSet:
             # delete the oldest curve-sets out of the list.
@@ -375,50 +369,50 @@ def scenewideEP(animation):
             epOBJ.reverse()
 
         print("Running Scivis")
-        if opSystem == "linux":
+        if str(os.environ["opSystem"]) == "linux":
             if platform.architecture()[0] == "64bit":
-                os.chdir(homePath + "bin" + os.sep + "scivis" + os.sep)
-                command = "chmod 755 %s" % (panel.quotedPath(homePath + "bin" + os.sep + "scivis" + os.sep + "SCIVISLINUX"))
+                os.chdir(str(os.environ["BBHome_BIN_SCIVIS"]))
+                command = "chmod 755 %s" % (panel.quotedPath(str(os.environ["BBHome_BIN_SCIVIS"]) + "SCIVISLINUX"))
                 command = panel.quotedPath(command)
                 panel.launch(exeName=command)
-                command = "%s %s %s %s %f %f %f %f %f" % (homePath + "bin" + os.sep + "scivis" + os.sep + "SCIVISLINUX", homePath + "tmp" + os.sep + "scenewide.obj", homePath + "tmp" + os.sep + "pot.dx", homePath + "tmp" + os.sep + "tmp.txt", bpy.context.scene.BBEPNumOfLine / 10, bpy.context.scene.BBEPMinPot, 45, 1, 3)
+                command = "%s %s %s %s %f %f %f %f %f" % (str(os.environ["BBHome_BIN_SCIVIS"]) + "SCIVISLINUX", str(os.environ["BBHome_TEMP"]) + "scenewide.obj", str(os.environ["BBHome_TEMP"]) + "pot.dx", str(os.environ["BBHome_TEMP"]) + "tmp.txt", bpy.context.scene.BBEPNumOfLine / 10, bpy.context.scene.BBEPMinPot, 45, 1, 3)
             else:
-                os.chdir(homePath + "bin" + os.sep + "scivis" + os.sep)
+                os.chdir(str(os.environ["BBHome_BIN_SCIVIS"]))
                 command = "chmod 755 %s" % (
-                    panel.quotedPath(homePath + "bin" + os.sep + "scivis" + os.sep + "SCIVIS"))
+                    panel.quotedPath(str(os.environ["BBHome_BIN_SCIVIS"]) + "SCIVIS"))
                 command = panel.quotedPath(command)
                 panel.launch(exeName=command)
-                command = "%s %s %s %s %f %f %f %f %f" % (homePath + "bin" + os.sep + "scivis" + os.sep + "SCIVIS",
-                                                          homePath + "tmp" + os.sep + "scenewide.obj",
-                                                          homePath + "tmp" + os.sep + "pot.dx",
-                                                          homePath + "tmp" + os.sep + "tmp.txt",
+                command = "%s %s %s %s %f %f %f %f %f" % (str(os.environ["BBHome_BIN_SCIVIS"]) + "SCIVIS",
+                                                          str(os.environ["BBHome_TEMP"]) + "scenewide.obj",
+                                                          str(os.environ["BBHome_TEMP"]) + "pot.dx",
+                                                          str(os.environ["BBHome_TEMP"]) + "tmp.txt",
                                                           bpy.context.scene.BBEPNumOfLine / 10,
                                                           bpy.context.scene.BBEPMinPot, 45, 1, 3)
-        elif opSystem == "darwin":
-            command = "chmod 755 %s" % (panel.quotedPath(homePath + "bin" + os.sep + "scivis" + os.sep + "darwin_SCIVIS"))
+        elif str(os.environ["opSystem"]) == "darwin":
+            command = "chmod 755 %s" % (panel.quotedPath(str(os.environ["BBHome_BIN_SCIVIS"]) + "darwin_SCIVIS"))
             command = panel.quotedPath(command)
             panel.launch(exeName=command)
-            command = "%s %s %s %s %f %f %f %f %f" % (homePath + "bin" + os.sep + "scivis" + os.sep + "darwin_SCIVIS",
-                                                      homePath + "tmp" + os.sep + "scenewide.obj",
-                                                      homePath + "tmp" + os.sep + "pot.dx",
-                                                      homePath + "tmp" + os.sep + "tmp.txt",
+            command = "%s %s %s %s %f %f %f %f %f" % (str(os.environ["BBHome_BIN_SCIVIS"]) + "darwin_SCIVIS",
+                                                      str(os.environ["BBHome_TEMP"]) + "scenewide.obj",
+                                                      str(os.environ["BBHome_TEMP"]) + "pot.dx",
+                                                      str(os.environ["BBHome_TEMP"]) + "tmp.txt",
                                                       bpy.context.scene.BBEPNumOfLine / 10,
                                                       bpy.context.scene.BBEPMinPot, 45, 1, 3)
         else:
             command = "%s %s %s %s %f %f %f %f %f" % (
-                panel.quotedPath(homePath + "bin" + os.sep + "scivis" + os.sep + "SCIVIS.exe"),
-                panel.quotedPath(homePath + "tmp" + os.sep + "scenewide.obj"),
-                panel.quotedPath(homePath + "tmp" + os.sep + "pot.dx"),
-                panel.quotedPath(homePath + "tmp" + os.sep + "tmp.txt"), bpy.context.scene.BBEPNumOfLine / 10,
+                panel.quotedPath(str(os.environ["BBHome_BIN_SCIVIS"]) + "SCIVIS.exe"),
+                panel.quotedPath(str(os.environ["BBHome_TEMP"]) + "scenewide.obj"),
+                panel.quotedPath(str(os.environ["BBHome_TEMP"]) + "pot.dx"),
+                panel.quotedPath(str(os.environ["BBHome_TEMP"]) + "tmp.txt"), bpy.context.scene.BBEPNumOfLine / 10,
                 bpy.context.scene.BBEPMinPot, 45, 1, 3)
         panel.launch(exeName=command)
 
         print("Importing data into Blender")
 
         if animation:
-            list = importEP(homePath + "tmp" + os.sep + "tmp.txt", animation=True)
+            list = importEP(str(os.environ["BBHome_TEMP"]) + "tmp.txt", animation=True)
         else:
-            list = importEP(homePath + "tmp" + os.sep + "tmp.txt", animation=False)
+            list = importEP(str(os.environ["BBHome_TEMP"]) + "tmp.txt", animation=False)
 
         epOBJ.append(list)
 
@@ -475,7 +469,7 @@ def importEP(path, animation=False):
         materialparticle = bpy.data.materials["Particle"]
     except Exception:
         # read the file once to generate curves
-        Directory = homePath + "data" + os.sep + "Particle.blend" + os.sep + "Material" + os.sep
+        Directory = str(os.environ["BBHome_DATA"]) + "Particle.blend" + os.sep + "Material" + os.sep
         Path = os.sep + os.sep + "data" + os.sep + "Particle.blend" + os.sep + "Material" + os.sep + "Particle"
         objName = "Particle"
 
@@ -575,7 +569,7 @@ def exportOBJ(path):
 
 
 def scenewideSetup():
-    path = homePath + "tmp" + os.sep + "scenewide.pdb"
+    path = str(os.environ["BBHome_TEMP"]) + "scenewide.pdb"
     # Actually, this is a custom "exportPDB" function, without instructions which were present in original "setup" function
     print("=============== exporting PDB")
     print("Exporting scene to: " + str(path))
@@ -626,7 +620,7 @@ def scenewideSurface():
     quality = "1"
 
     try:
-        oPath = homePath + "tmp" + os.sep + "scenewide.pdb"
+        oPath = str(os.environ["BBHome_TEMP"]) + "scenewide.pdb"
         f = open(oPath, "r")
         lines = f.readlines()
         lineCounter = 0
@@ -644,9 +638,9 @@ def scenewideSurface():
         s = "Unable to fix scenewide.pdb: " + str(E)
         print(s)
 
-    tmpPathO = homePath + "tmp" + os.sep + "surface.pml"
-    tmpPathL = "load " + homePath + "tmp" + os.sep + "scenewide.pdb" + "\n"
-    tmpPathS = "save " + homePath + "tmp" + os.sep + "scenewide.wrl" + "\n"
+    tmpPathO = str(os.environ["BBHome_TEMP"]) + "surface.pml"
+    tmpPathL = "load " + str(os.environ["BBHome_TEMP"]) + "scenewide.pdb" + "\n"
+    tmpPathS = "save " + str(os.environ["BBHome_TEMP"]) + "scenewide.wrl" + "\n"
 
     with open(tmpPathO, mode="w") as f:
         f.write("# This file is automatically generated by BioBlender at runtime.\n")
@@ -663,11 +657,11 @@ def scenewideSurface():
         f.write("quit")
     print("Making Surface using PyMOL")
 
-    command = "%s -c -u %s" % (panel.quotedPath(pyMolPath), panel.quotedPath(homePath + "tmp" + os.sep + "surface.pml"))
+    command = "%s -c -u %s" % (panel.quotedPath(str(os.environ["pyMolPath"])), panel.quotedPath(str(os.environ["BBHome_TEMP"]) + "surface.pml"))
     command = panel.quotedPath(command)
     panel.launch(exeName=command)
 
-    bpy.ops.import_scene.x3d(filepath=homePath + "tmp" + os.sep + "scenewide.wrl", axis_forward="Y", axis_up="Z")
+    bpy.ops.import_scene.x3d(filepath=str(os.environ["BBHome_TEMP"]) + "scenewide.wrl", axis_forward="Y", axis_up="Z")
 
     try:
         ob = bpy.data.objects["Shape_IndexedFaceSet"]
