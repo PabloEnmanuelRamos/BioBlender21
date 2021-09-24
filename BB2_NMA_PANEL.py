@@ -66,35 +66,33 @@ def computeNormalModeTrajectories():
         cutoff = bpy.context.scene.BBNMACutoff
         nbconfiguration = bpy.context.scene.BBNMANbModel
 
-        outputpath = homePath + "fetched" + os.sep + name + "_" + "Mode" + str(mode) + "_" + struct + "_" + str(rmsd) + "_" + str(nbconfiguration) + ".pdb"
+        outputpath = str(os.environ["BBHome_FETCHED"]) + name + "_" + "Mode" + str(mode) + "_" + struct + "_" + str(rmsd) + "_" + str(nbconfiguration) + ".pdb"
 
         file = open(outputpath, 'w+')
         file.close()
-        global pyPath
-        if opSystem == "linux":
-            pyPath = "python"
+        if str(os.environ["opSystem"]) == "linux":
+            os.environ["pyPath"] = "python"
             if os.path.exists("/usr/bin/python3.9"):
-                pyPath = "python3.9"
+                os.environ["pyPath"] = "python3.9"
             elif os.path.exists("/usr/bin/python3.8"):
-                pyPath = "python3.8"
+                os.environ["pyPath"] = "python3.8"
             elif os.path.exists("/usr/bin/python3"):
-                pyPath = "python3"
+                os.environ["pyPath"] = "python3"
             elif os.path.exists("/usr/bin/python"):
-                pyPath = "python"
+                os.environ["pyPath"] = "python"
             elif os.path.exists("/usr/bin/python2"):
-                pyPath = "python2"
-            command = "chmod 755 %s" % (panel.quotedPath(homePath + "bin" + os.sep + "nma" + os.sep + "nma.py"))
+                os.environ["pyPath"] = "python2"
+            command = "chmod 755 %s" % (panel.quotedPath(str(os.environ["BBHome_BIN_NMA"])))
             command = panel.quotedPath(command)
             p = panel.launch(exeName=command, asynct=False)
-        elif opSystem == "darwin":
-            pyPath = "python"
-            command = "chmod 755 %s" % (panel.quotedPath(homePath + "bin" + os.sep + "nma" + os.sep + "nma.py"))
+        elif str(os.environ["opSystem"]) == "darwin":
+            command = "chmod 755 %s" % (panel.quotedPath(str(os.environ["BBHome_BIN_NMA"])))
             command = panel.quotedPath(command)
             p = panel.launch(exeName=command, asynct=False)
         else:
-            pyPath = "python"
+            os.environ["pyPath"] = "python"
         command = "%s %s -i %s -o %s -m %d -r %f -n %d %s " % (
-            panel.quotedPath(pyPath), panel.quotedPath(homePath + "bin" + os.sep + "nma" + os.sep + "nma.py"),
+            panel.quotedPath(str(os.environ["pyPath"])), panel.quotedPath(str(os.environ["BBHome_BIN_NMA"])),
             panel.quotedPath(inputpath),
             panel.quotedPath(outputpath), mode, rmsd, nbconfiguration, struct)
         p = panel.launch(exeName=command, asynct=False)
