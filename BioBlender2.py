@@ -75,39 +75,50 @@ bpy.types.Object.bb2_outputOptions = bpy.props.EnumProperty(name="bb2_outputopti
 
 
 # OS detection
-opSystem = ""
+os.environ["opSystem"] = ""
 if os.sys.platform == "linux":
-    opSystem = "linux"
+    os.environ["opSystem"] = "linux"
 elif os.sys.platform == "darwin":
-    opSystem = "darwin"
+    os.environ["opSystem"] = "darwin"
 else:
-    opSystem = "win"
+    os.environ["opSystem"] = "win"
 
 # Home Path
-homePath = os.path.dirname(__file__) + os.sep
+os.environ["BBHome"] = os.path.dirname(__file__) + os.sep
+os.environ["BBHome_BIN"] = os.environ["BBHome"] + "bin" + os.sep
+os.environ["BBHome_TEMP"] = os.environ["BBHome"] + "tmp" + os.sep
+os.environ["BBHome_BIN_PDBPQR"] = os.environ["BBHome_BIN"] + "pdb2pqr-1.6" + os.sep
+os.environ["BBHome_DATA"] = os.environ["BBHome"] + "data" + os.sep
+os.environ["BBHome_FETCHED"] = os.environ["BBHome"] + "fetched" + os.sep
+os.environ["BBHome_BIN_SCIVIS"] = os.environ["BBHome_BIN"] + "scivis" + os.sep
+os.environ["BBHome_BIN_APBS"] = os.environ["BBHome_BIN"] + "apbs-1.2.1" + os.sep
+os.environ["BBHome_BIN_NMA"] = os.environ["BBHome_BIN"] + "nma" + os.sep + "nma.py"
+os.environ["BBHome_BIN_PyMLP"] = os.environ["BBHome_BIN"] + "pyMLP-1.0" + os.sep
+
+
 
 # Blender Path
-blenderPath = str(sys.executable[:-27]) + os.sep + "blender.exe"
-if (opSystem == "linux") or (opSystem == "darwin"):
-    blenderPath = "blender"
+os.environ["blenderPath"] = str(sys.executable[:-27]) + os.sep + "blender.exe"
+if (str(os.environ["opSystem"]) == "linux") or (str(os.environ["opSystem"]) == "darwin"):
+    os.environ["blenderPath"] = "blender"
 
 # Python Path
-if (opSystem == "linux") or (opSystem == "darwin"):
-    pyPath = "python"
+if (str(os.environ["opSystem"]) == "linux") or (str(os.environ["opSystem"]) == "darwin"):
+    os.environ["pyPath"] = "python"
     if os.path.exists("/usr/bin/python3.9"):
-        pyPath = "python3.9"
+        os.environ["pyPath"] = "python3.9"
     elif os.path.exists("/usr/bin/python3.8"):
-        pyPath = "python3.8"
+        os.environ["pyPath"] = "python3.8"
     elif os.path.exists("/usr/bin/python3.7"):
-        pyPath = "python3.7"
+        os.environ["pyPath"] = "python3.7"
     elif os.path.exists("/usr/bin/python3"):
-        pyPath = "python3"
+        os.environ["pyPath"] = "python3"
     elif os.path.exists("/usr/bin/python"):
-        pyPath = "python"
+        os.environ["pyPath"] = "python"
     elif os.path.exists("/usr/bin/python2"):
-        pyPath = "python2"
+        os.environ["pyPath"] = "python2"
 else:
-    pyPath = ""
+    os.environ["pyPath"] = ""
     pyPathSearch = [
         "%systemdrive%\\Python39\\python.exe",
         "%systemdrive%\\Python38\\python.exe",
@@ -117,7 +128,7 @@ else:
     ]
 
 # Detecting PyMol path
-pyMolPath = ""
+os.environ["pyMolPath"] = ""
 pyMolPathSearch = [
     "%systemdrive%\\Python39\\Scripts\\pymol.cmd",
     "%systemdrive%\\Python38\\Scripts\\pymol.cmd",
@@ -130,22 +141,22 @@ pyMolPathSearch = [
     "%programfiles(x86)%\\DeLano Scientific\\PyMOL\\PymolWin.exe",
 ]
 
-if (opSystem == "linux") or (opSystem == "darwin"):
-    pyMolPath = "pymol"
+if (str(os.environ["opSystem"]) == "linux") or (str(os.environ["opSystem"]) == "darwin"):
+    os.environ["pyMolPath"] = "pymol"
 else:
     from winreg import ExpandEnvironmentStrings
 
     # auto detect pymol path
-    if not pyMolPath:
+    if not os.environ["pyMolPath"]:
         for i in pyMolPathSearch:
             if os.path.exists(ExpandEnvironmentStrings(i)):
-                pyMolPath = ExpandEnvironmentStrings(i)
+                os.environ["pyMolPath"] = ExpandEnvironmentStrings(i)
                 break
     # auto detect python path
-    if not pyPath:
+    if not os.environ["pyPath"]:
         for i in pyPathSearch:
             if os.path.exists(ExpandEnvironmentStrings(i)):
-                pyPath = ExpandEnvironmentStrings(i)
+                os.environ["pyPath"] = ExpandEnvironmentStrings(i)
                 break
 
 # ==================================================================================================================
