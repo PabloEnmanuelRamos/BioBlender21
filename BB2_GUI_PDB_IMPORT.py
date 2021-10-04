@@ -5,6 +5,7 @@ from bpy import *
 import bpy.path
 from bpy.path import abspath
 from mathutils import *
+import numpy
 
 # Python standard modules
 from urllib.parse import urlencode
