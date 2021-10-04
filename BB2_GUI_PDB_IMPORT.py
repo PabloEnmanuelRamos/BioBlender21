@@ -571,12 +571,12 @@ def core_createModels():
         if curFrame == 1:
             modelCopy = model.copy()
             # select and temporary rename template atom
+            bpy.context.view_layer.objects.active = bpy.data.objects["atom"]
             bpy.data.objects["atom"].hide_viewport = False
             bpy.data.objects["atom"].select_set(True)
             bpy.data.objects["atom"].name = str(id)
             # (count - 1) because there is the original template object.
-            for i in range(len(model) - 1):
-                bpy.ops.object.duplicate(linked=True, mode='DUMMY')
+            duplicate(len(model) - 1)
             try:
                 # walk through list of objects and set name, location and material for each atom
                 for i, obj in enumerate(bpy.data.objects):
@@ -1005,6 +1005,44 @@ def sessionLoad(verbose=False):
             print("Persistent session loaded")
         except Exception as E:
             print("Warning: Error when loading session cache:", E)
+
+def create_duplicate(list):
+    for obj in list:
+        obj.select_set(True)
+
+    bpy.ops.object.duplicate(linked=True, mode='DUMMY')
+    for obj in bpy.data.objects:
+        if obj.select_get():
+            list.append(obj)
+    for obj in bpy.data.objects:
+        if obj.select_get():
+            list.append(obj)
+    for obj in list:
+        obj.select_set(True)
+
+
+def duplicate(diff):
+    object = bpy.context.view_layer.objects.active
+    bpy.ops.object.select_all(action='DESELECT')
+    bpy.context.view_layer.objects.active = object
+    bpy.context.view_layer.objects.active.select_set(True)
+    if int(diff) <= 50:
+        for num in range(diff):
+            bpy.ops.object.duplicate(linked=True, mode='DUMMY')
+    else:
+        lista = []
+        lista.append(bpy.context.view_layer.objects.active)
+        for obj in bpy.data.objects:
+            if bpy.context.view_layer.objects.active != obj and obj.select_get():
+                lista.append(obj)
+
+        total = int(str(numpy.log2(diff)).split('.')[0])
+        i = 0
+        while i < total:
+            create_duplicate(lista)
+            i += 1
+        difference = int(diff - pow(2, int(str(numpy.log2(diff)).split('.')[0]))) + 1
+        duplicate(difference)
 
 
 if __name__ == "__main__":
