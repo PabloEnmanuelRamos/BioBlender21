@@ -37,7 +37,7 @@ bl_info = {
     "name": "BioBlender 2.1",
     "author": "SciVis, IFC-CNR",
     "version": (2, 1),
-    "blender": (2, 93, 0),
+    "blender": (3, 0, 40),
     "location": "Properties > Scene",
     "description": "BioBlender 2.1",
     "warning": "",
