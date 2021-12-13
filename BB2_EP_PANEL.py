@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # Blender modules
-# 2020-03-28
+# 2021-12-12
 import bpy
 from bpy import *
 import bpy.path
@@ -496,9 +496,14 @@ def importEP(path, animation=False):
                     spline.points.add(len(pts) // 4 - 1)
                     spline.points.foreach_set('co', pts)
                     spline.use_endpoint_u = True
-                    ob.field.type = "GUIDE"
-                    ob.field.use_max_distance = True
-                    ob.field.distance_max = 0.05
+                    try:
+                        bpy.context.view_layer.objects.active = ob
+                        bpy.ops.object.forcefield_toggle()
+                        ob.field.type = "GUIDE"
+                        ob.field.use_max_distance = True
+                        ob.field.distance_max = 0.05
+                    except Exception as E:
+                        print("Failed to Generate Force Field: " + str(E))
                     # objList keeps a list of all EP related objects for easy deletion
                     ob.parent = bpy.data.objects[parentEmpty]
                     objList.append(ob)
