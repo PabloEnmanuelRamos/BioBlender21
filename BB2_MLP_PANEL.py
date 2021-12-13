@@ -433,6 +433,9 @@ def mlpRender(tID):
     mat = bpy.data.materials["matMLP" + NamePDBMLP(tID) + "_" + getNumFrameMLP()]
     ob.data.materials.append(mat)
 
+    if os.path.exists(str(os.environ["BBHome_TEMP"]) + NamePDBMLP(tID) + os.sep + "MLPBaked.png"):
+        os.remove(str(os.environ["BBHome_TEMP"]) + NamePDBMLP(tID) + os.sep + "MLPBaked.png")
+    
     bpy.data.images["MLPBaked"].name = "MLPBaked" + NamePDBMLP(tID)
     image = bpy.data.images["MLPBaked" + NamePDBMLP(tID)]
     image.source = "GENERATED"
