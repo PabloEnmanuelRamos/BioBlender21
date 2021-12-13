@@ -96,11 +96,10 @@ os.environ["BBHome_BIN_NMA"] = os.environ["BBHome_BIN"] + "nma" + os.sep + "nma.
 os.environ["BBHome_BIN_PyMLP"] = os.environ["BBHome_BIN"] + "pyMLP-1.0" + os.sep
 
 
-
 # Blender Path
-os.environ["blenderPath"] = str(sys.executable[:-27]) + os.sep + "blender.exe"
-if (str(os.environ["opSystem"]) == "linux") or (str(os.environ["opSystem"]) == "darwin"):
-    os.environ["blenderPath"] = "blender"
+path_blend = str(sys.executable).split(os.sep)
+os.environ["blenderPath"] = path_blend[-8] + os.sep + path_blend[-7] + os.sep + path_blend[-6] + os.sep + path_blend[-5] + os.sep + "blender.exe"
+
 
 # Python Path
 if (str(os.environ["opSystem"]) == "linux") or (str(os.environ["opSystem"]) == "darwin"):
@@ -119,13 +118,8 @@ if (str(os.environ["opSystem"]) == "linux") or (str(os.environ["opSystem"]) == "
         os.environ["pyPath"] = "python2"
 else:
     os.environ["pyPath"] = ""
-    pyPathSearch = [
-        "%systemdrive%\\Python39\\python.exe",
-        "%systemdrive%\\Python38\\python.exe",
-        "%systemdrive%\\Python37\\python.exe",
-        "%systemdrive%\\Python35\\python.exe",
-        "/usr/bin/python"
-    ]
+    pyPathSearch = ["%programfiles%\\Python39\\python.exe", "%programfiles%\\Python38\\python.exe", "%programfiles%\\Python37\\python.exe", "%programfiles%\\Python35\\python.exe", "%systemdrive%\\Python39\\python.exe", "%systemdrive%\\Python38\\python.exe", "%systemdrive%\\Python37\\python.exe", "%systemdrive%\\Python35\\python.exe", "/usr/bin/python"]
+
 
 # Detecting PyMol path
 os.environ["pyMolPath"] = ""
