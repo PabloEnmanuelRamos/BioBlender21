@@ -431,6 +431,10 @@ def mlpRender(tID):
     append_file_to_current_blend(Path, objName, Directory)
     bpy.data.materials["matVetex"].name = "matMLP" + NamePDBMLP(tID) + "_" + getNumFrameMLP()
     mat = bpy.data.materials["matMLP" + NamePDBMLP(tID) + "_" + getNumFrameMLP()]
+    try:
+        ob.data.materials.pop()
+    except Exception as E:
+        print("Failed to remove materials from the generated surface: " + str(E))
     ob.data.materials.append(mat)
 
     if os.path.exists(str(os.environ["BBHome_TEMP"]) + NamePDBMLP(tID) + os.sep + "MLPBaked.png"):
