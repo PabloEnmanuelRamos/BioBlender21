@@ -98,7 +98,13 @@ os.environ["BBHome_BIN_PyMLP"] = os.environ["BBHome_BIN"] + "pyMLP-1.0" + os.sep
 
 # Blender Path
 path_blend = str(sys.executable).split(os.sep)
-os.environ["blenderPath"] = path_blend[-8] + os.sep + path_blend[-7] + os.sep + path_blend[-6] + os.sep + path_blend[-5] + os.sep + "blender.exe"
+os.environ["blenderPath"] = ""
+if os.sys.platform == "linux":
+    os.environ["blenderPath"] = path_blend[-8] + os.sep + path_blend[-7] + os.sep + path_blend[-6] + os.sep + path_blend[-5] + os.sep + "blender"
+elif os.sys.platform == "darwin":
+    os.environ["blenderPath"] = "blender"
+else:
+    os.environ["blenderPath"] = path_blend[-8] + os.sep + path_blend[-7] + os.sep + path_blend[-6] + os.sep + path_blend[-5] + os.sep + "blender.exe"
 
 
 # Python Path
