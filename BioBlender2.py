@@ -115,6 +115,8 @@ else:
 # Python Path
 if (str(os.environ["opSystem"]) == "linux") or (str(os.environ["opSystem"]) == "darwin"):
     os.environ["pyPath"] = "python"
+    if os.path.exists("/usr/bin/python3.10"):
+        os.environ["pyPath"] = "python3.10"
     if os.path.exists("/usr/bin/python3.9"):
         os.environ["pyPath"] = "python3.9"
     elif os.path.exists("/usr/bin/python3.8"):
@@ -129,7 +131,7 @@ if (str(os.environ["opSystem"]) == "linux") or (str(os.environ["opSystem"]) == "
         os.environ["pyPath"] = "python2"
 else:
     os.environ["pyPath"] = ""
-    pyPathSearch = ["%programfiles%\\Python39\\python.exe", "%programfiles%\\Python38\\python.exe", "%programfiles%\\Python37\\python.exe", "%programfiles%\\Python35\\python.exe", "%systemdrive%\\Python39\\python.exe", "%systemdrive%\\Python38\\python.exe", "%systemdrive%\\Python37\\python.exe", "%systemdrive%\\Python35\\python.exe", "/usr/bin/python"]
+    pyPathSearch = ["%programfiles%\\Python310\\python.exe", "%programfiles%\\Python39\\python.exe", "%programfiles%\\Python38\\python.exe", "%programfiles%\\Python37\\python.exe", "%programfiles%\\Python35\\python.exe", "%systemdrive%\\Python310\\python.exe", "%systemdrive%\\Python39\\python.exe", "%systemdrive%\\Python38\\python.exe", "%systemdrive%\\Python37\\python.exe", "%systemdrive%\\Python35\\python.exe", "/usr/bin/python"]
 
 
 # Detecting PyMol path
@@ -143,7 +145,10 @@ pyMolPathSearch = [
     "%programfiles%\\DeLano Scientific\\PyMOL\\PymolWin.exe",
     "%programfiles(x86)%\\PyMOL\\PyMOL\\PymolWin.exe",
     "%programfiles(x86)%\\DeLano Scientific\\PyMOL Eval\\PymolWin.exe",
-    "%programfiles(x86)%\\DeLano Scientific\\PyMOL\\PymolWin.exe",
+    "%programfiles(x86)%\\DeLano Scientific\\PyMOL\\PymolWin.exe", 
+    "C:\\ProgramData\\PyMOL\\PyMOL\\PymolWin.exe",
+    "C:\\ProgramData\\DeLano Scientific\\PyMOL Eval\\PymolWin.exe",
+    "C:\\ProgramData\\DeLano Scientific\\PyMOL\\PymolWin.exe"
 ]
 
 if (str(os.environ["opSystem"]) == "linux") or (str(os.environ["opSystem"]) == "darwin"):
@@ -164,6 +169,9 @@ else:
                 os.environ["pyPath"] = ExpandEnvironmentStrings(i)
                 break
 
+
+if not os.environ["pyMolPath"]:
+    os.environ["pyMolPath"] = "pymol"
 # ==================================================================================================================
 # ==================================================================================================================
 # ==================================================================================================================
