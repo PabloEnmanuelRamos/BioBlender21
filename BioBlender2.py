@@ -146,7 +146,7 @@ pyMolPathSearch = [
     "%programfiles(x86)%\\PyMOL\\PyMOL\\PymolWin.exe",
     "%programfiles(x86)%\\DeLano Scientific\\PyMOL Eval\\PymolWin.exe",
     "%programfiles(x86)%\\DeLano Scientific\\PyMOL\\PymolWin.exe", 
-    "C:\\ProgramData\\PyMOL\\PyMOL\\PymolWin.exe",
+    "C:\\ProgramData\\PyMOL\\PymolWin.exe",
     "C:\\ProgramData\\DeLano Scientific\\PyMOL Eval\\PymolWin.exe",
     "C:\\ProgramData\\DeLano Scientific\\PyMOL\\PymolWin.exe"
 ]
@@ -172,6 +172,9 @@ else:
 
 if not os.environ["pyMolPath"]:
     os.environ["pyMolPath"] = "pymol"
+
+if not os.environ["pyPath"]:
+    os.environ["pyPath"] = "python"
 # ==================================================================================================================
 # ==================================================================================================================
 # ==================================================================================================================
@@ -449,6 +452,10 @@ scale_cov = {C: [1.1, 0.6], CA: [0.99, 0.6], N: [1.07, 0.6], O: [1.04, 0.6], S: 
 # ==================================================================================================================
 # ==================================================================================================================
 # ==================================================================================================================
+
+print("BlenderPath: " + str(os.environ["blenderPath"]))
+print("PythonPath: " + str(os.environ["pyPath"]))
+print("PyMolPath: " + str(os.environ["pyMolPath"]))
 
 if __name__ == "__main__":
     print("BioBlender2 module created")
