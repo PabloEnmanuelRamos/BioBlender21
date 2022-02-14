@@ -619,7 +619,7 @@ def mlpRender(tID):
 # Wait until process finishes
 def wait(process):
     while process.poll() is None:
-        time.sleep(0.1)
+        time.sleep(1.0)
 
 
 def DeleteSurface():
