@@ -291,8 +291,8 @@ def surface(sPid=0, optName=""):
     command = "%s -c -u %s" % (quotedPath(str(os.environ["pyMolPath"])), quotedPath(str(os.environ["BBHome_TEMP"]) + MLP.NamePDBMLP(sPid) + os.sep + "surface.pml"))
 
     command = quotedPath(command)
-    launch(exeName=command)
-
+    p = launch(exeName=command, asynct=True)
+    MLP.wait(p)
     bpy.ops.import_scene.x3d(filepath=str(os.environ["BBHome_TEMP"]) + MLP.NamePDBMLP(sPid) + os.sep + "tmp.wrl", axis_forward="Y", axis_up="Z")
     try:
         ob = bpy.data.objects['Shape_IndexedFaceSet']
